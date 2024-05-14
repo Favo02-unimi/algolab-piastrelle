@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::io::{self, BufRead};
+use std::fmt;
 
 // piastrella rappresentata da x e y
 type Piastrella = (i32, i32);
@@ -15,7 +16,6 @@ type Colore = (String, u32);
 type Requisito = (u8, String);
 
 // una regola: dei requisiti e un colore "finale"
-#[derive(Debug)] // per printare
 struct Regola {
     requisiti: Vec<Requisito>,
     colore: String,
@@ -28,6 +28,16 @@ struct Regola {
 struct Piano {
     piastrelle: HashMap<Piastrella, Colore>,
     regole: Vec<Regola>,
+}
+
+impl fmt::Display for Regola {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ", self.colore)?;
+        for (coefficiente, colore) in &self.requisiti {
+            write!(f, "{} {}", coefficiente, colore)?;
+        }
+        Ok(())
+    }
 }
 
 impl Piano {
@@ -69,8 +79,7 @@ impl Piano {
     fn stampa(&self) -> () {
         println!("(");
         for regola in &self.regole {
-            // TODO: formattare bene regola
-            println!("{} {:?}", regola.colore, regola.requisiti);
+            println!("{}", regola);
         }
         println!(")");
     }
