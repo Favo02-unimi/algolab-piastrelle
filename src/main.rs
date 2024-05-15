@@ -106,17 +106,10 @@ impl Piano {
 
         let mut coda = VecDeque::from([(x, y)]);
         let mut visitati = HashSet::from([(x, y)]);
-        let colore = &self.piastrelle.get(&Piastrella { x, y }).unwrap().colore;
-
-        let mut totale = 0;
+        let Colore { colore: coloreOmogeneo, intensita: mut totale } = &self.piastrelle.get(&Piastrella { x, y }).unwrap();
 
         while !coda.is_empty() {
             let (cx, cy) = coda.pop_front().unwrap();
-            totale += self
-                .piastrelle
-                .get(&Piastrella { x: cx, y: cy })
-                .unwrap()
-                .intensita;
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
@@ -125,13 +118,14 @@ impl Piano {
                     }
 
                     match self.piastrelle.get(&Piastrella { x: cx+dx, y: cy+dy }) {
-                        Some(Colore { colore: curColore, .. }) => {
-                            if omogeneo && !curColore.eq(colore) {
+                        Some(Colore { colore, intensita }) => {
+                            if omogeneo && !colore.eq(coloreOmogeneo) {
                                 continue;
                             }
 
                             visitati.insert((cx+dx, cy+dy));
                             coda.push_back((cx+dx, cy+dy));
+                            totale += intensita;
                         }
                         None => (),
                     }
