@@ -7,13 +7,24 @@ use std::io::{self, BufRead};
 use std::fmt;
 
 // piastrella rappresentata da x e y
-type Piastrella = (i32, i32);
+#[derive(Eq, Hash, PartialEq)]
+struct Piastrella {
+    x: i32,
+    y: i32,
+}
 
 // colore di una piastrella: colore e intensità
-type Colore = (String, u32);
+#[derive(Clone)]
+struct Colore {
+    colore: String,
+    intensita: u32,
+}
 
 // requisito di una regola: un coefficiente da 0 a 8 e un colore
-type Requisito = (u8, String);
+struct Requisito {
+    coefficiente: u8,
+    colore: String,
+}
 
 // una regola: dei requisiti e un colore "finale"
 struct Regola {
@@ -33,8 +44,8 @@ struct Piano {
 impl fmt::Display for Regola {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} ", self.colore)?;
-        for (coefficiente, colore) in &self.requisiti {
-            write!(f, "{} {}", coefficiente, colore)?;
+        for requisito in &self.requisiti {
+            write!(f, "{} {}", requisito.coefficiente, requisito.colore)?;
         }
         Ok(())
     }
@@ -43,11 +54,11 @@ impl fmt::Display for Regola {
 impl Piano {
 
     fn colora(&mut self, x: i32, y: i32, colore: String) -> () {
-        self.piastrelle.insert((x,y), (colore, 1));
+        self.piastrelle.insert(Piastrella{x, y}, Colore{intensita: 1, colore});
     }
 
     fn spegni(&mut self, x: i32, y: i32) -> () {
-        self.piastrelle.remove(&(x,y));
+        self.piastrelle.remove(&Piastrella{x, y});
     }
 
     fn regola(&mut self, regola: String) -> () {
@@ -56,7 +67,7 @@ impl Piano {
         let mut requisiti: Vec<Requisito> = Vec::new();
 
         for i in (1..parti.len()).step_by(2) {
-            requisiti.push((parti[i].parse().unwrap(), String::from(parti[i+1])))
+            requisiti.push(Requisito{coefficiente: parti[i].parse().unwrap(), colore: String::from(parti[i+1])})
         }
 
         self.regole.push(Regola {
@@ -67,12 +78,12 @@ impl Piano {
     }
 
     fn stato(&self, x: i32, y: i32) -> Colore {
-        match self.piastrelle.get(&(x,y)) {
+        match self.piastrelle.get(&Piastrella{x, y}) {
             Some(colore) => {
-                println!("{} {}", colore.0, colore.1);
+                println!("{} {}", colore.colore, colore.intensita);
                 colore.clone()
             },
-            None => (String::from("spenta"), 0)
+            None => Colore{colore: String::from("spenta"), intensita: 0}
         }
     }
 
@@ -85,20 +96,21 @@ impl Piano {
     }
 
     fn bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> u32 {
-        if !self.piastrelle.contains_key(&(x, y)) {
-            println!("blocco (omog: {}) per {} {}: {}", omogeneo, x, y, 0);
+        if !self.piastrelle.contains_key(&Piastrella{x, y}) {
+            // println!("blocco (omog: {}) per {} {}: {}", omogeneo, x, y, 0);
+            println!("0");
             return 0
         }
 
         let mut coda = VecDeque::from([(x, y)]);
         let mut visitati = HashSet::from([(x, y)]);
-        let colore = &self.piastrelle.get(&(x, y)).unwrap().0;
+        let colore = &self.piastrelle.get(&Piastrella{x, y}).unwrap().colore;
 
         let mut totale = 0;
 
         while !coda.is_empty() {
             let (cx, cy) = coda.pop_front().unwrap();
-            totale += self.piastrelle.get(&(cx, cy)).unwrap().1;
+            totale += self.piastrelle.get(&Piastrella{x: cx, y: cy}).unwrap().intensita;
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
@@ -106,8 +118,8 @@ impl Piano {
                         continue;
                     }
 
-                    match self.piastrelle.get(&(cx+dx, cy+dy)) {
-                        Some((curColore, _)) => {
+                    match self.piastrelle.get(&Piastrella{x: cx+dx, y: cy+dy}) {
+                        Some(Colore{colore: curColore, intensita: _}) => {
                             if omogeneo && !curColore.eq(colore) {
                                 continue;
                             }
@@ -121,7 +133,8 @@ impl Piano {
             }
         }
 
-        println!("blocco (omog: {}) per {} {}: {}", omogeneo, x, y, totale);
+        // println!("blocco (omog: {}) per {} {}: {}", omogeneo, x, y, totale);
+        println!("{}", totale);
         totale
     }
 
