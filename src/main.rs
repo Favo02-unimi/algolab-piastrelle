@@ -150,7 +150,7 @@ impl Piano {
         totale
     }
 
-    fn propaga(&mut self, x: i32, y: i32) -> () {
+    fn propagaGenerico(&self, x: i32, y: i32) -> Option<(i32, i32, usize, String)> {
         let mut intorno: HashMap<String, u8> = HashMap::new();
 
         for dy in -1..=1 {
@@ -164,16 +164,43 @@ impl Piano {
             }
         }
 
-        'regole: for (i, Regola { requisiti, colore: coloreTarget, .. }) in self.regole.iter().enumerate() {
-            'requisiti: for Requisito { coefficiente, colore } in requisiti {
+        for (i, Regola { requisiti, colore: coloreTarget, .. }) in self.regole.iter().enumerate() {
+            for Requisito { coefficiente, colore } in requisiti {
                 if intorno.get(colore).unwrap_or(&0) < coefficiente {
-                    break 'requisiti;
+                    break;
                 }
 
-                self.piastrelle.insert(Piastrella { x, y }, Colore { colore: coloreTarget.clone(), intensita: 1 });
-                self.regole[i].utilizzo += 1;
-                break 'regole;
+                return Some((x, y, i, coloreTarget.clone()))
             }
+        }
+
+        None
+    }
+
+    fn propaga(&mut self, x: i32, y: i32) -> () {
+        match self.propagaGenerico(x, y) {
+            Some((x, y, i, colore)) => {
+                self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
+                self.regole[i].utilizzo += 1;
+            }
+            None => ()
+        }
+    }
+
+    fn propagaBlocco(&mut self, x: i32, y: i32) -> () {
+        let (.., visitati) = self.bloccoGenerico(x, y, false);
+        let mut applicazioni: Vec<(i32, i32, usize, String)> = Vec::new();
+
+        for Piastrella { x, y } in visitati {
+            match self.propagaGenerico(x, y) {
+                Some(applicazione) => applicazioni.push(applicazione),
+                None => ()
+            }
+        }
+
+        for (x, y, i, colore) in applicazioni {
+            self.regole[i].utilizzo += 1;
+            self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
         }
     }
 
@@ -223,8 +250,16 @@ fn main() {
                 let y: i32 = parti[2].parse().unwrap();
                 piano.bloccoOmogeneo(x, y);
             }
-            "p" => println!("TODO propaga"),
-            "P" => println!("TODO propaga blocco"),
+            "p" => {
+                let x: i32 = parti[1].parse().unwrap();
+                let y: i32 = parti[2].parse().unwrap();
+                piano.propaga(x, y);
+            }
+            "P" => {
+                let x: i32 = parti[1].parse().unwrap();
+                let y: i32 = parti[2].parse().unwrap();
+                piano.propagaBlocco(x, y);
+            }
             "o" => println!("TODO ordina"),
             "t" => println!("TODO pista"),
             "L" => println!("TODO lung"),
