@@ -42,9 +42,9 @@ struct Piano {
 
 impl fmt::Display for Regola {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ", self.colore)?;
+        write!(f, "{}", self.colore)?;
         for Requisito { coefficiente, colore } in &self.requisiti {
-            write!(f, "{} {}", coefficiente, colore)?;
+            write!(f, " {} {}", coefficiente, colore)?;
         }
         Ok(())
     }
@@ -101,7 +101,6 @@ impl Piano {
         let start = Piastrella { x, y };
 
         if !self.piastrelle.contains_key(&start) {
-            println!("0");
             return (0, HashSet::new());
         }
 
@@ -133,17 +132,18 @@ impl Piano {
             }
         }
 
-        println!("{}", totale);
         (totale, visitati)
     }
 
     fn blocco(&self, x: i32, y: i32) -> u32 {
         let (totale, ..) = self.bloccoGenerico(x, y, false);
+        println!("{}", totale);
         totale
     }
 
     fn bloccoOmogeneo(&self, x: i32, y: i32) -> u32 {
         let (totale, ..) = self.bloccoGenerico(x, y, true);
+        println!("{}", totale);
         totale
     }
 
