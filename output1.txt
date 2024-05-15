@@ -1,6 +1,0 @@
-g 1
-(
-w 1 g2 b
-z 1 g2 b
-)
-blocco (omog: false) per 0 0: 10
