@@ -7,7 +7,7 @@ use std::fmt;
 use std::io::{self, BufRead};
 
 // piastrella rappresentata da x e y
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 struct Piastrella {
     x: i32,
     y: i32,
@@ -97,34 +97,37 @@ impl Piano {
         println!(")");
     }
 
-    fn bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> u32 {
-        if !self.piastrelle.contains_key(&Piastrella { x, y }) {
-            // println!("blocco (omog: {}) per {} {}: {}", omogeneo, x, y, 0);
+    fn bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> (u32, HashSet<Piastrella>) {
+        let start = Piastrella { x, y };
+
+        if !self.piastrelle.contains_key(&start) {
             println!("0");
-            return 0;
+            return (0, HashSet::new());
         }
 
-        let mut coda = VecDeque::from([(x, y)]);
-        let mut visitati = HashSet::from([(x, y)]);
-        let Colore { colore: coloreOmogeneo, intensita: mut totale } = &self.piastrelle.get(&Piastrella { x, y }).unwrap();
+        let mut coda = VecDeque::from([start.clone()]);
+        let mut visitati = HashSet::from([start.clone()]);
+        let Colore { colore: coloreOmogeneo, intensita: mut totale } = &self.piastrelle.get(&start).unwrap();
 
         while !coda.is_empty() {
-            let (cx, cy) = coda.pop_front().unwrap();
+            let Piastrella { x: cx, y: cy } = coda.pop_front().unwrap();
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
-                    if visitati.contains(&(cx + dx, cy + dy)) {
+                    let adiacente = Piastrella{ x: cx+dx, y: cy+dy };
+
+                    if visitati.contains(&adiacente) {
                         continue;
                     }
 
-                    match self.piastrelle.get(&Piastrella { x: cx+dx, y: cy+dy }) {
+                    match self.piastrelle.get(&adiacente) {
                         Some(Colore { colore, intensita }) => {
                             if omogeneo && !colore.eq(coloreOmogeneo) {
                                 continue;
                             }
 
-                            visitati.insert((cx+dx, cy+dy));
-                            coda.push_back((cx+dx, cy+dy));
+                            visitati.insert(adiacente.clone());
+                            coda.push_back(adiacente.clone());
                             totale += intensita;
                         }
                         None => (),
@@ -133,17 +136,18 @@ impl Piano {
             }
         }
 
-        // println!("blocco (omog: {}) per {} {}: {}", omogeneo, x, y, totale);
         println!("{}", totale);
-        totale
+        (totale, visitati)
     }
 
     fn blocco(&self, x: i32, y: i32) -> u32 {
-        self.bloccoGenerico(x, y, false)
+        let (totale, ..) = self.bloccoGenerico(x, y, false);
+        totale
     }
 
     fn bloccoOmogeneo(&self, x: i32, y: i32) -> u32 {
-        self.bloccoGenerico(x, y, true)
+        let (totale, ..) = self.bloccoGenerico(x, y, true);
+        totale
     }
 
     fn propaga(&mut self, x: i32, y: i32) -> () {
