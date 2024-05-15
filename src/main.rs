@@ -155,9 +155,10 @@ impl Piano {
                 if dy == 0 && dx == 0 {
                     continue;
                 }
-                let colore = &self.piastrelle.get(&Piastrella { x, y }).unwrap().colore;
-                let valore = *intorno.get(colore).unwrap_or(&0);
-                intorno.insert(colore.clone(), valore);
+                if let Some(Colore { colore, .. }) = self.piastrelle.get(&Piastrella { x: x+dx, y: y+dy }) {
+                    let valore = *intorno.get(colore).unwrap_or(&0) + 1;
+                    intorno.insert(colore.clone(), valore);
+                }
             }
         }
 
@@ -167,6 +168,7 @@ impl Piano {
                     continue 'regole; // continue outer loop, skipping return
                 }
             }
+            // println!("applica a {} {} regola {}", x, y, i);
             return Some((x, y, i, coloreTarget.clone()))
         }
 
@@ -194,6 +196,10 @@ impl Piano {
             self.regole[i].utilizzo += 1;
             self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
         }
+    }
+
+    fn ordina(&mut self) {
+        self.regole.sort_by(|a, b| a.utilizzo.cmp(&b.utilizzo));
     }
 
 }
@@ -252,7 +258,9 @@ fn main() {
                 let y: i32 = parti[2].parse().unwrap();
                 piano.propagaBlocco(x, y);
             }
-            "o" => println!("TODO ordina"),
+            "o" => {
+                piano.ordina();
+            }
             "t" => println!("TODO pista"),
             "L" => println!("TODO lung"),
             "i" => println!("TODO intensità"),
