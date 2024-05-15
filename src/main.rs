@@ -145,6 +145,34 @@ impl Piano {
     fn bloccoOmogeneo(&self, x: i32, y: i32) -> u32 {
         self.bloccoGenerico(x, y, true)
     }
+
+    fn propaga(&mut self, x: i32, y: i32) -> () {
+        let mut intorno: HashMap<String, u8> = HashMap::new();
+
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                if dy == 0 && dx == 0 {
+                    continue;
+                }
+                let colore = &self.piastrelle.get(&Piastrella { x, y }).unwrap().colore;
+                let valore = intorno.get(colore).unwrap_or(&0).clone();
+                intorno.insert(colore.clone(), valore);
+            }
+        }
+
+        'regole: for (i, Regola { requisiti, colore: coloreTarget, .. }) in self.regole.iter().enumerate() {
+            'requisiti: for Requisito { coefficiente, colore } in requisiti {
+                if intorno.get(colore).unwrap_or(&0) < coefficiente {
+                    break 'requisiti;
+                }
+
+                self.piastrelle.insert(Piastrella { x, y }, Colore { colore: coloreTarget.clone(), intensita: 1 });
+                self.regole[i].utilizzo += 1;
+                break 'regole;
+            }
+        }
+    }
+
 }
 
 fn main() {
