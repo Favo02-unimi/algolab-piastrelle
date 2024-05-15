@@ -52,16 +52,16 @@ impl fmt::Display for Regola {
 
 impl Piano {
 
-    fn colora(&mut self, x: i32, y: i32, colore: String) -> () {
+    fn colora(&mut self, x: i32, y: i32, colore: String) {
         self.piastrelle.insert(Piastrella { x, y }, Colore { intensita: 1, colore });
     }
 
-    fn spegni(&mut self, x: i32, y: i32) -> () {
+    fn spegni(&mut self, x: i32, y: i32) {
         self.piastrelle.remove(&Piastrella { x, y });
     }
 
-    fn regola(&mut self, regola: String) -> () {
-        let parti: Vec<&str> = regola.split(" ").collect();
+    fn regola(&mut self, regola: String) {
+        let parti: Vec<&str> = regola.split(' ').collect();
 
         let mut requisiti: Vec<Requisito> = Vec::new();
 
@@ -83,13 +83,13 @@ impl Piano {
         match self.piastrelle.get(&Piastrella { x, y }) {
             Some(Colore { colore, intensita }) => {
                 println!("{} {}", colore, intensita);
-                Colore { colore: colore.clone(), intensita: intensita.clone() }
+                Colore { colore: colore.clone(), intensita: *intensita }
             }
             None => Colore { colore: String::from("spenta"), intensita: 0 },
         }
     }
 
-    fn stampa(&self) -> () {
+    fn stampa(&self) {
         println!("(");
         for regola in &self.regole {
             println!("{}", regola);
@@ -120,17 +120,14 @@ impl Piano {
                         continue;
                     }
 
-                    match self.piastrelle.get(&adiacente) {
-                        Some(Colore { colore, intensita }) => {
-                            if omogeneo && !colore.eq(coloreOmogeneo) {
-                                continue;
-                            }
-
-                            visitati.insert(adiacente.clone());
-                            coda.push_back(adiacente.clone());
-                            totale += intensita;
+                    if let Some(Colore { colore, intensita }) = self.piastrelle.get(&adiacente) {
+                        if omogeneo && !colore.eq(coloreOmogeneo) {
+                            continue;
                         }
-                        None => (),
+
+                        visitati.insert(adiacente.clone());
+                        coda.push_back(adiacente.clone());
+                        totale += intensita;
                     }
                 }
             }
@@ -159,42 +156,37 @@ impl Piano {
                     continue;
                 }
                 let colore = &self.piastrelle.get(&Piastrella { x, y }).unwrap().colore;
-                let valore = intorno.get(colore).unwrap_or(&0).clone();
+                let valore = *intorno.get(colore).unwrap_or(&0);
                 intorno.insert(colore.clone(), valore);
             }
         }
 
-        for (i, Regola { requisiti, colore: coloreTarget, .. }) in self.regole.iter().enumerate() {
+        'regole: for (i, Regola { requisiti, colore: coloreTarget, .. }) in self.regole.iter().enumerate() {
             for Requisito { coefficiente, colore } in requisiti {
                 if intorno.get(colore).unwrap_or(&0) < coefficiente {
-                    break;
+                    continue 'regole; // continue outer loop, skipping return
                 }
-
-                return Some((x, y, i, coloreTarget.clone()))
             }
+            return Some((x, y, i, coloreTarget.clone()))
         }
 
         None
     }
 
-    fn propaga(&mut self, x: i32, y: i32) -> () {
-        match self.propagaGenerico(x, y) {
-            Some((x, y, i, colore)) => {
-                self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
-                self.regole[i].utilizzo += 1;
-            }
-            None => ()
+    fn propaga(&mut self, x: i32, y: i32) {
+        if let Some((x, y, i, colore)) = self.propagaGenerico(x, y) {
+            self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
+            self.regole[i].utilizzo += 1;
         }
     }
 
-    fn propagaBlocco(&mut self, x: i32, y: i32) -> () {
+    fn propagaBlocco(&mut self, x: i32, y: i32) {
         let (.., visitati) = self.bloccoGenerico(x, y, false);
         let mut applicazioni: Vec<(i32, i32, usize, String)> = Vec::new();
 
         for Piastrella { x, y } in visitati {
-            match self.propagaGenerico(x, y) {
-                Some(applicazione) => applicazioni.push(applicazione),
-                None => ()
+            if let Some(applicazione) = self.propagaGenerico(x, y) {
+                applicazioni.push(applicazione)
             }
         }
 
@@ -215,7 +207,7 @@ fn main() {
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let line = line.unwrap();
-        let parti: Vec<&str> = line.split(" ").collect();
+        let parti: Vec<&str> = line.split(' ').collect();
 
         match parti[0] {
             "C" => {
