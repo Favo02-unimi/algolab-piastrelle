@@ -202,6 +202,38 @@ impl Piano {
         self.regole.sort_by(|a, b| a.utilizzo.cmp(&b.utilizzo));
     }
 
+    fn pista(&self, x: i32, y: i32, s: String) -> Option<u32> {
+        let mut cx = x;
+        let mut cy = y;
+
+        let mut totaleIntensita: u32 = match self.piastrelle.get(&Piastrella { x, y }) {
+            Some(Colore { intensita, .. }) => *intensita,
+            None => return None
+        };
+
+        for dir in s.split(' ') {
+            match dir {
+                "NN" => (cx += 0, cy += 1),
+                "SS" => (cx += 0, cy += -1),
+                "EE" => (cx += 1, cy += 0),
+                "WW" => (cx += -1, cy += 0),
+                "NE" => (cx += 1, cy += 1),
+                "NW" => (cx += -1, cy += 1),
+                "SE" => (cx += 1, cy += -1),
+                "SW" => (cx += -1, cy += -1),
+                _ => return None
+            };
+
+            match self.piastrelle.get(&Piastrella { x: cx, y: cy }) {
+                Some(Colore { intensita, .. }) => totaleIntensita += intensita,
+                None => return None
+            }
+        }
+
+        println!("{}", totaleIntensita);
+        Some(totaleIntensita)
+    }
+
 }
 
 fn main() {
@@ -261,7 +293,11 @@ fn main() {
             "o" => {
                 piano.ordina();
             }
-            "t" => println!("TODO pista"),
+            "t" => {
+                let x: i32 = parti[1].parse().unwrap();
+                let y: i32 = parti[2].parse().unwrap();
+                piano.pista(x, y, parti[3..].join(" "));
+            }
             "L" => println!("TODO lung"),
             "i" => println!("TODO intensità"),
             "m" => println!("TODO perimetro"),
