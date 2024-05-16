@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
 
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
@@ -234,6 +236,47 @@ impl Piano {
         Some(totaleIntensita)
     }
 
+    fn lung(&self, x1: i32, y1: i32, x2: i32, y2: i32) -> Option<u32> {
+        let startDist = match self.piastrelle.get(&Piastrella { x: x1, y: y1 }) {
+            Some(Colore { intensita, .. }) => intensita,
+            None => return None
+        };
+
+        if x1 == x2 && y1 == y2 {
+            println!("{}", startDist);
+            return Some(*startDist)
+        }
+
+        let mut coda = BinaryHeap::from([ Reverse((*startDist, x1, y1)) ]);
+        let mut visitati: HashSet<Piastrella> = HashSet::from([ Piastrella { x: x1, y: y1 } ]);
+
+        while !coda.is_empty() {
+            let (dist, cx, cy) = coda.pop().unwrap().0;
+
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    let adiacente = Piastrella{ x: cx+dx, y: cy+dy };
+
+                    if visitati.contains(&adiacente) {
+                        continue;
+                    }
+
+                    if let Some(Colore { intensita, .. }) = self.piastrelle.get(&adiacente) {
+                        if cx+dx == x2 && cy+dy == y2 {
+                            println!("{}", dist + intensita);
+                            return Some(dist + intensita)
+                        }
+
+                        visitati.insert(adiacente.clone());
+                        coda.push(Reverse((dist + intensita, cx+dx, cy+dy)));
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
 }
 
 fn main() {
@@ -298,7 +341,13 @@ fn main() {
                 let y: i32 = parti[2].parse().unwrap();
                 piano.pista(x, y, parti[3..].join(" "));
             }
-            "L" => println!("TODO lung"),
+            "L" => {
+                let x1: i32 = parti[1].parse().unwrap();
+                let y1: i32 = parti[2].parse().unwrap();
+                let x2: i32 = parti[3].parse().unwrap();
+                let y2: i32 = parti[4].parse().unwrap();
+                piano.lung(x1, y1, x2, y2);
+            }
             "i" => println!("TODO intensità"),
             "m" => println!("TODO perimetro"),
             "q" => return,
