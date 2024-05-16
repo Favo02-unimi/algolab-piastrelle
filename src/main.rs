@@ -5,40 +5,42 @@ use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::io::{self, BufRead};
 
-// piastrella rappresentata da x e y
+/// Piastrella rappresentata da x e y
 #[derive(Eq, Hash, PartialEq, Clone)]
 struct Piastrella {
     x: i32,
     y: i32,
 }
 
-// colore di una piastrella: colore e intensità
-struct Colore {
+/// Colorazione di una piastrella: colore e intensità
+#[derive(PartialEq, Clone, Debug)]
+struct Colorazione {
     colore: String,
     intensita: u32,
 }
 
-// requisito di una regola: un coefficiente da 0 a 8 e un colore
+/// Requisito di una regola: un coefficiente da 0 a 8 e un colore
 struct Requisito {
     coefficiente: u8,
     colore: String,
 }
 
-// una regola: dei requisiti, un colore "finale" e il suo utilizzo
+/// Regola: dei requisiti, un colore "finale" e il suo utilizzo
 struct Regola {
     requisiti: Vec<Requisito>,
     colore: String,
     utilizzo: u32,
 }
 
-// piano, l'intero sistema:
-// - delle piastrelle con relativo colore
-// - delle regole con relativo utilizzo
+/// Piano, l'intero sistema:
+/// - delle piastrelle con relativo colore
+/// - delle regole con relativo utilizzo
 struct Piano {
-    piastrelle: HashMap<Piastrella, Colore>,
+    piastrelle: HashMap<Piastrella, Colorazione>,
     regole: Vec<Regola>,
 }
 
+/// implementazione trait Display usato nelle println! per Regola
 impl fmt::Display for Regola {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.colore)?;
@@ -53,32 +55,97 @@ impl fmt::Display for Regola {
     }
 }
 
+/// Implementazione metodi per Piano
 impl Piano {
+    /// Colora una piastrella indicata da `x` e `y`, impostando il suo `colore`
+    /// e la sua `intensita` a 1, modificando il Piano
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella da colorare
+    /// * `y` - ordinate della piastrella da colorare
+    /// * `colore` - colore di cui colorare la piastrella
+    ///
+    /// # Panics
+    /// * se `colore` è una stringa vuota
     fn colora(&mut self, x: i32, y: i32, colore: String) {
+        assert!(colore.len() > 0);
+
         self.piastrelle.insert(
             Piastrella { x, y },
-            Colore {
+            Colorazione {
                 intensita: 1,
                 colore,
             },
         );
     }
 
+    /// Spegne una piastrella indicata da `x` e `y`, modificando il Piano
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella da spegnere
+    /// * `y` - ordinate della piastrella da spegnere
     fn spegni(&mut self, x: i32, y: i32) {
         self.piastrelle.remove(&Piastrella { x, y });
     }
 
+    /// Restituisce lo stato (colorazione) di una piastrella, indicata da `x` e `y`
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella
+    /// * `y` - ordinate della piastrella
+    ///
+    /// # Returns
+    /// * `Some(Colorazione)` - se la piastrella è accesa, la sua colorazione
+    /// * `None` - se la piastrella è spenta
+    fn stato(&self, x: i32, y: i32) -> Option<Colorazione> {
+        self.piastrelle.get(&Piastrella { x, y }).cloned()
+    }
+
+    /// Aggiunge una regola di colorazione (`Regola`) al piano, parsandola dalla
+    /// stringa `regola`. La stringa deve essere nel formato `colore coeff1 col1 coeff2 col2 ...`,
+    /// dove tutti i `coeff*` sono numerici e la loro somma non deve eccedere 8
+    /// il piano viene modificato
+    ///
+    /// # Arguments
+    /// * `regola` - stringa che rappresenta una regola
+    ///
+    /// # Panics
+    /// * se la regola è malformata:
+    ///     * mancano del tutto i coefficienti
+    ///     * i coefficienti non sono accoppiati ad un colore
+    ///     * tutti i coefficienti sono numerici
+    ///     * la somma dei coefficienti supera 8
     fn regola(&mut self, regola: String) {
         let parti: Vec<&str> = regola.split(' ').collect();
+        let mut sommaCoefficienti = 0;
 
-        let mut requisiti: Vec<Requisito> = Vec::new();
+        assert!(parti.len() > 2, "regola invalida (mancanza coefficienti)");
+        assert!(parti.len() % 2 == 1, "regola invalida (coppie malformate)");
 
-        for i in (1..parti.len()).step_by(2) {
-            requisiti.push(Requisito {
-                coefficiente: parti[i].parse().unwrap(),
-                colore: String::from(parti[i + 1]),
+        let requisiti = parti
+            .iter()
+            .skip(1)
+            .step_by(2)
+            .zip(parti.iter().skip(3).step_by(2))
+            .map(|(coefficiente, colore)| {
+                assert!(
+                    coefficiente.parse::<u8>().is_ok(),
+                    "regola invalida (coefficiente invalido)"
+                );
+
+                sommaCoefficienti += coefficiente.parse::<u8>().unwrap();
+
+                Requisito {
+                    coefficiente: coefficiente.parse().unwrap(),
+                    colore: String::from(*colore),
+                }
             })
-        }
+            .collect();
+
+        assert!(
+            sommaCoefficienti <= 8,
+            "regola invalida (somma coefficienti maggiore di 8)"
+        );
 
         self.regole.push(Regola {
             requisiti,
@@ -87,28 +154,37 @@ impl Piano {
         })
     }
 
-    fn stato(&self, x: i32, y: i32) -> Colore {
-        match self.piastrelle.get(&Piastrella { x, y }) {
-            Some(Colore { colore, intensita }) => {
-                println!("{} {}", colore, intensita);
-                Colore {
-                    colore: colore.clone(),
-                    intensita: *intensita,
-                }
-            }
-            None => Colore {
-                colore: String::from("spenta"),
-                intensita: 0,
+    /// Restituisce le regole di propagazione (`Regole`) contenute nel piano nel formato
+    /// ```format
+    /// (
+    /// colore coeff1 col1 coeff2 col2 ...
+    /// colore coeff1 col1 coeff2 col2 coeff3 col3
+    /// ...
+    /// )
+    /// ```
+    ///
+    /// # Returns
+    /// * `String` che rappresenta le regole nel formato descritto
+    fn stampa(&self) -> String {
+        let mut result = String::from("(\n");
+        self.regole.iter().for_each(
+            |Regola {
+                 requisiti, colore, ..
+             }| {
+                result.push_str(colore);
+                requisiti.iter().for_each(
+                    |Requisito {
+                         coefficiente,
+                         colore,
+                     }| {
+                        result.push_str(&format!(" {} {}", coefficiente, colore))
+                    },
+                );
+                result.push_str("\n");
             },
-        }
-    }
-
-    fn stampa(&self) {
-        println!("(");
-        for regola in &self.regole {
-            println!("{}", regola);
-        }
-        println!(")");
+        );
+        result.push_str(")\n");
+        result
     }
 
     fn bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> (u32, HashSet<Piastrella>) {
@@ -120,7 +196,7 @@ impl Piano {
 
         let mut coda = VecDeque::from([start.clone()]);
         let mut visitati = HashSet::from([start.clone()]);
-        let Colore {
+        let Colorazione {
             colore: coloreOmogeneo,
             intensita: mut totale,
         } = &self.piastrelle.get(&start).unwrap();
@@ -139,7 +215,8 @@ impl Piano {
                         continue;
                     }
 
-                    if let Some(Colore { colore, intensita }) = self.piastrelle.get(&adiacente) {
+                    if let Some(Colorazione { colore, intensita }) = self.piastrelle.get(&adiacente)
+                    {
                         if omogeneo && !colore.eq(coloreOmogeneo) {
                             continue;
                         }
@@ -175,7 +252,7 @@ impl Piano {
                 if dy == 0 && dx == 0 {
                     continue;
                 }
-                if let Some(Colore { colore, .. }) = self.piastrelle.get(&Piastrella {
+                if let Some(Colorazione { colore, .. }) = self.piastrelle.get(&Piastrella {
                     x: x + dx,
                     y: y + dy,
                 }) {
@@ -214,7 +291,7 @@ impl Piano {
         if let Some((x, y, i, colore)) = self.propagaGenerico(x, y) {
             self.piastrelle.insert(
                 Piastrella { x, y },
-                Colore {
+                Colorazione {
                     colore,
                     intensita: 1,
                 },
@@ -237,7 +314,7 @@ impl Piano {
             self.regole[i].utilizzo += 1;
             self.piastrelle.insert(
                 Piastrella { x, y },
-                Colore {
+                Colorazione {
                     colore,
                     intensita: 1,
                 },
@@ -254,7 +331,7 @@ impl Piano {
         let mut cy = y;
 
         let mut totaleIntensita: u32 = match self.piastrelle.get(&Piastrella { x, y }) {
-            Some(Colore { intensita, .. }) => *intensita,
+            Some(Colorazione { intensita, .. }) => *intensita,
             None => return None,
         };
 
@@ -272,7 +349,7 @@ impl Piano {
             };
 
             match self.piastrelle.get(&Piastrella { x: cx, y: cy }) {
-                Some(Colore { intensita, .. }) => totaleIntensita += intensita,
+                Some(Colorazione { intensita, .. }) => totaleIntensita += intensita,
                 None => return None,
             }
         }
@@ -283,7 +360,7 @@ impl Piano {
 
     fn lung(&self, x1: i32, y1: i32, x2: i32, y2: i32) -> Option<u32> {
         let startDist = match self.piastrelle.get(&Piastrella { x: x1, y: y1 }) {
-            Some(Colore { intensita, .. }) => intensita,
+            Some(Colorazione { intensita, .. }) => intensita,
             None => return None,
         };
 
@@ -309,7 +386,7 @@ impl Piano {
                         continue;
                     }
 
-                    if let Some(Colore { intensita, .. }) = self.piastrelle.get(&adiacente) {
+                    if let Some(Colorazione { intensita, .. }) = self.piastrelle.get(&adiacente) {
                         if cx + dx == x2 && cy + dy == y2 {
                             println!("{}", dist + intensita);
                             return Some(dist + intensita);
@@ -355,10 +432,12 @@ fn main() {
             "?" => {
                 let x: i32 = parti[1].parse().unwrap();
                 let y: i32 = parti[2].parse().unwrap();
-                piano.stato(x, y);
+                if let Some(Colorazione { colore, intensita }) = piano.stato(x, y) {
+                    println!("{} {}", colore, intensita);
+                }
             }
             "s" => {
-                piano.stampa();
+                print!("{}", piano.stampa());
             }
             "b" => {
                 let x: i32 = parti[1].parse().unwrap();
