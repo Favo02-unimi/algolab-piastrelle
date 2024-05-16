@@ -1,10 +1,7 @@
 #![allow(non_snake_case)]
 
 use std::cmp::Reverse;
-use std::collections::BinaryHeap;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::collections::VecDeque;
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::io::{self, BufRead};
 
@@ -45,7 +42,11 @@ struct Piano {
 impl fmt::Display for Regola {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.colore)?;
-        for Requisito { coefficiente, colore } in &self.requisiti {
+        for Requisito {
+            coefficiente,
+            colore,
+        } in &self.requisiti
+        {
             write!(f, " {} {}", coefficiente, colore)?;
         }
         Ok(())
@@ -53,9 +54,14 @@ impl fmt::Display for Regola {
 }
 
 impl Piano {
-
     fn colora(&mut self, x: i32, y: i32, colore: String) {
-        self.piastrelle.insert(Piastrella { x, y }, Colore { intensita: 1, colore });
+        self.piastrelle.insert(
+            Piastrella { x, y },
+            Colore {
+                intensita: 1,
+                colore,
+            },
+        );
     }
 
     fn spegni(&mut self, x: i32, y: i32) {
@@ -70,7 +76,7 @@ impl Piano {
         for i in (1..parti.len()).step_by(2) {
             requisiti.push(Requisito {
                 coefficiente: parti[i].parse().unwrap(),
-                colore: String::from(parti[i+1]),
+                colore: String::from(parti[i + 1]),
             })
         }
 
@@ -85,9 +91,15 @@ impl Piano {
         match self.piastrelle.get(&Piastrella { x, y }) {
             Some(Colore { colore, intensita }) => {
                 println!("{} {}", colore, intensita);
-                Colore { colore: colore.clone(), intensita: *intensita }
+                Colore {
+                    colore: colore.clone(),
+                    intensita: *intensita,
+                }
             }
-            None => Colore { colore: String::from("spenta"), intensita: 0 },
+            None => Colore {
+                colore: String::from("spenta"),
+                intensita: 0,
+            },
         }
     }
 
@@ -108,14 +120,20 @@ impl Piano {
 
         let mut coda = VecDeque::from([start.clone()]);
         let mut visitati = HashSet::from([start.clone()]);
-        let Colore { colore: coloreOmogeneo, intensita: mut totale } = &self.piastrelle.get(&start).unwrap();
+        let Colore {
+            colore: coloreOmogeneo,
+            intensita: mut totale,
+        } = &self.piastrelle.get(&start).unwrap();
 
         while !coda.is_empty() {
             let Piastrella { x: cx, y: cy } = coda.pop_front().unwrap();
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
-                    let adiacente = Piastrella{ x: cx+dx, y: cy+dy };
+                    let adiacente = Piastrella {
+                        x: cx + dx,
+                        y: cy + dy,
+                    };
 
                     if visitati.contains(&adiacente) {
                         continue;
@@ -157,21 +175,36 @@ impl Piano {
                 if dy == 0 && dx == 0 {
                     continue;
                 }
-                if let Some(Colore { colore, .. }) = self.piastrelle.get(&Piastrella { x: x+dx, y: y+dy }) {
+                if let Some(Colore { colore, .. }) = self.piastrelle.get(&Piastrella {
+                    x: x + dx,
+                    y: y + dy,
+                }) {
                     let valore = *intorno.get(colore).unwrap_or(&0) + 1;
                     intorno.insert(colore.clone(), valore);
                 }
             }
         }
 
-        'regole: for (i, Regola { requisiti, colore: coloreTarget, .. }) in self.regole.iter().enumerate() {
-            for Requisito { coefficiente, colore } in requisiti {
+        'regole: for (
+            i,
+            Regola {
+                requisiti,
+                colore: coloreTarget,
+                ..
+            },
+        ) in self.regole.iter().enumerate()
+        {
+            for Requisito {
+                coefficiente,
+                colore,
+            } in requisiti
+            {
                 if intorno.get(colore).unwrap_or(&0) < coefficiente {
                     continue 'regole; // continue outer loop, skipping return
                 }
             }
             // println!("applica a {} {} regola {}", x, y, i);
-            return Some((x, y, i, coloreTarget.clone()))
+            return Some((x, y, i, coloreTarget.clone()));
         }
 
         None
@@ -179,7 +212,13 @@ impl Piano {
 
     fn propaga(&mut self, x: i32, y: i32) {
         if let Some((x, y, i, colore)) = self.propagaGenerico(x, y) {
-            self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
+            self.piastrelle.insert(
+                Piastrella { x, y },
+                Colore {
+                    colore,
+                    intensita: 1,
+                },
+            );
             self.regole[i].utilizzo += 1;
         }
     }
@@ -196,7 +235,13 @@ impl Piano {
 
         for (x, y, i, colore) in applicazioni {
             self.regole[i].utilizzo += 1;
-            self.piastrelle.insert(Piastrella { x, y }, Colore { colore, intensita: 1 });
+            self.piastrelle.insert(
+                Piastrella { x, y },
+                Colore {
+                    colore,
+                    intensita: 1,
+                },
+            );
         }
     }
 
@@ -210,7 +255,7 @@ impl Piano {
 
         let mut totaleIntensita: u32 = match self.piastrelle.get(&Piastrella { x, y }) {
             Some(Colore { intensita, .. }) => *intensita,
-            None => return None
+            None => return None,
         };
 
         for dir in s.split(' ') {
@@ -223,12 +268,12 @@ impl Piano {
                 "NW" => (cx += -1, cy += 1),
                 "SE" => (cx += 1, cy += -1),
                 "SW" => (cx += -1, cy += -1),
-                _ => return None
+                _ => return None,
             };
 
             match self.piastrelle.get(&Piastrella { x: cx, y: cy }) {
                 Some(Colore { intensita, .. }) => totaleIntensita += intensita,
-                None => return None
+                None => return None,
             }
         }
 
@@ -239,36 +284,39 @@ impl Piano {
     fn lung(&self, x1: i32, y1: i32, x2: i32, y2: i32) -> Option<u32> {
         let startDist = match self.piastrelle.get(&Piastrella { x: x1, y: y1 }) {
             Some(Colore { intensita, .. }) => intensita,
-            None => return None
+            None => return None,
         };
 
         if x1 == x2 && y1 == y2 {
             println!("{}", startDist);
-            return Some(*startDist)
+            return Some(*startDist);
         }
 
-        let mut coda = BinaryHeap::from([ Reverse((*startDist, x1, y1)) ]);
-        let mut visitati: HashSet<Piastrella> = HashSet::from([ Piastrella { x: x1, y: y1 } ]);
+        let mut coda = BinaryHeap::from([Reverse((*startDist, x1, y1))]);
+        let mut visitati: HashSet<Piastrella> = HashSet::from([Piastrella { x: x1, y: y1 }]);
 
         while !coda.is_empty() {
             let (dist, cx, cy) = coda.pop().unwrap().0;
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
-                    let adiacente = Piastrella{ x: cx+dx, y: cy+dy };
+                    let adiacente = Piastrella {
+                        x: cx + dx,
+                        y: cy + dy,
+                    };
 
                     if visitati.contains(&adiacente) {
                         continue;
                     }
 
                     if let Some(Colore { intensita, .. }) = self.piastrelle.get(&adiacente) {
-                        if cx+dx == x2 && cy+dy == y2 {
+                        if cx + dx == x2 && cy + dy == y2 {
                             println!("{}", dist + intensita);
-                            return Some(dist + intensita)
+                            return Some(dist + intensita);
                         }
 
                         visitati.insert(adiacente.clone());
-                        coda.push(Reverse((dist + intensita, cx+dx, cy+dy)));
+                        coda.push(Reverse((dist + intensita, cx + dx, cy + dy)));
                     }
                 }
             }
@@ -276,7 +324,6 @@ impl Piano {
 
         None
     }
-
 }
 
 fn main() {
@@ -304,7 +351,7 @@ fn main() {
             }
             "r" => {
                 piano.regola(parti[1..].join(" "));
-            },
+            }
             "?" => {
                 let x: i32 = parti[1].parse().unwrap();
                 let y: i32 = parti[2].parse().unwrap();
