@@ -1,4 +1,5 @@
 import random
+import math
 
 def generaPiastrelle(numPiastrelle):
   for _ in range(numPiastrelle):
@@ -40,10 +41,23 @@ def propaga(numPropagazioni):
     print("o")
     print("s")
 
+def pista(numPiste):
+  for _ in range(numPiste):
+    x = random.randint(-bound, bound)
+    y = random.randint(-bound, bound)
+    leng = random.randint(1, int(math.sqrt(bound)))
+    print(f"t {x} {y}", end="")
+    for _ in range(leng):
+      d = dirs[random.randint(0, len(dirs)-1)]
+      print(f" {d}", end="")
+    print()
+
 colors = ["q", "w", "e", "r"]
+dirs = ["NN", "SS", "WW", "EE", "NE", "NO", "SE", "SO"]
 bound = 500
 
 generaPiastrelle(500_000)
 generaRegole(1_000)
 blocco(1_000)
 propaga(1_000)
+pista(1000)

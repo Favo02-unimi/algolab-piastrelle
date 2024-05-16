@@ -19,6 +19,7 @@ Progetto _"Piastrelle"_ del corso di Algoritmi e Strutture Dati... **in rust** ð
 | _tutte_ | [small.in](inputs/small.in) | $39$ | $37$ | $\approx 0.00s$ |
 | `blocco`, `bloccoOmog` | [blocco.in](inputs/blocco.in) | $502000$ | $2000$ | $\approx 0.90s$ |
 | `propaga`, `propagaBlocco`, `ordina` | [propaga.in](inputs/propaga.in) | $506001$ | $1005002$ | $\approx 9.00s$ |
+| `piste` | [piste.in](inputs/piste.in) | $501000$ | $9$ | $\approx 0.30s$ |
 
 - _Funzioni target_: funzioni sul quale l'input Ã¨ incentrato (ne vengono chiamate anche altre per setuppare l'ambiente)
 - _Input_: file di input utilizzato
