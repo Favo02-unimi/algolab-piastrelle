@@ -2,8 +2,8 @@
 
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
-use std::fmt;
-use std::io::{self, BufRead};
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, Write};
 
 /// Piastrella rappresentata da x e y
 #[derive(Eq, Hash, PartialEq, Clone)]
@@ -40,21 +40,6 @@ struct Piano {
     regole: Vec<Regola>,
 }
 
-/// implementazione trait Display usato nelle println! per Regola
-impl fmt::Display for Regola {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.colore)?;
-        for Requisito {
-            coefficiente,
-            colore,
-        } in &self.requisiti
-        {
-            write!(f, " {} {}", coefficiente, colore)?;
-        }
-        Ok(())
-    }
-}
-
 /// Implementazione metodi per Piano
 impl Piano {
     /// Colora una piastrella indicata da `x` e `y`, impostando il suo `colore`
@@ -68,7 +53,7 @@ impl Piano {
     /// # Panics
     /// * se `colore` è una stringa vuota
     fn colora(&mut self, x: i32, y: i32, colore: String) {
-        assert!(colore.len() > 0);
+        assert!(!colore.is_empty());
 
         self.piastrelle.insert(
             Piastrella { x, y },
@@ -126,7 +111,7 @@ impl Piano {
             .iter()
             .skip(1)
             .step_by(2)
-            .zip(parti.iter().skip(3).step_by(2))
+            .zip(parti.iter().skip(2).step_by(2))
             .map(|(coefficiente, colore)| {
                 assert!(
                     coefficiente.parse::<u8>().is_ok(),
@@ -180,10 +165,10 @@ impl Piano {
                         result.push_str(&format!(" {} {}", coefficiente, colore))
                     },
                 );
-                result.push_str("\n");
+                result.push('\n');
             },
         );
-        result.push_str(")\n");
+        result.push(')');
         result
     }
 
@@ -234,13 +219,11 @@ impl Piano {
 
     fn blocco(&self, x: i32, y: i32) -> u32 {
         let (totale, ..) = self.bloccoGenerico(x, y, false);
-        println!("{}", totale);
         totale
     }
 
     fn bloccoOmogeneo(&self, x: i32, y: i32) -> u32 {
         let (totale, ..) = self.bloccoGenerico(x, y, true);
-        println!("{}", totale);
         totale
     }
 
@@ -280,7 +263,6 @@ impl Piano {
                     continue 'regole; // continue outer loop, skipping return
                 }
             }
-            // println!("applica a {} {} regola {}", x, y, i);
             return Some((x, y, i, coloreTarget.clone()));
         }
 
@@ -354,7 +336,6 @@ impl Piano {
             }
         }
 
-        println!("{}", totaleIntensita);
         Some(totaleIntensita)
     }
 
@@ -365,7 +346,6 @@ impl Piano {
         };
 
         if x1 == x2 && y1 == y2 {
-            println!("{}", startDist);
             return Some(*startDist);
         }
 
@@ -388,7 +368,6 @@ impl Piano {
 
                     if let Some(Colorazione { intensita, .. }) = self.piastrelle.get(&adiacente) {
                         if cx + dx == x2 && cy + dy == y2 {
-                            println!("{}", dist + intensita);
                             return Some(dist + intensita);
                         }
 
@@ -403,14 +382,43 @@ impl Piano {
     }
 }
 
-fn main() {
+fn run(input: Option<String>, output: Option<String>) {
     let mut piano = Piano {
         piastrelle: HashMap::new(),
         regole: Vec::new(),
     };
 
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
+    let input: Box<dyn BufRead> = match input {
+        Some(filename) => match File::open(filename) {
+            Ok(file) => Box::new(BufReader::new(file)),
+            Err(..) => panic!("errore aprendo il file"),
+        },
+        None => Box::new(BufReader::new(io::stdin())),
+    };
+
+    let mut output: Option<File> = match output {
+        Some(filename) => match File::create(filename) {
+            Ok(file) => Some(file),
+            Err(..) => panic!("errore aprendo il file"),
+        },
+        None => None,
+    };
+
+    let mut logger = |mut s: String| {
+        s.push('\n');
+        match output {
+            Some(ref mut file) => {
+                if file.write_all(s.as_bytes()).is_err() {
+                    panic!("errore scrivendo nel file")
+                }
+            }
+            None => {
+                println!("{}", s);
+            }
+        }
+    };
+
+    for line in input.lines() {
         let line = line.unwrap();
         let parti: Vec<&str> = line.split(' ').collect();
 
@@ -433,21 +441,21 @@ fn main() {
                 let x: i32 = parti[1].parse().unwrap();
                 let y: i32 = parti[2].parse().unwrap();
                 if let Some(Colorazione { colore, intensita }) = piano.stato(x, y) {
-                    println!("{} {}", colore, intensita);
+                    logger(format!("{} {}", colore, intensita));
                 }
             }
             "s" => {
-                print!("{}", piano.stampa());
+                logger(piano.stampa());
             }
             "b" => {
                 let x: i32 = parti[1].parse().unwrap();
                 let y: i32 = parti[2].parse().unwrap();
-                piano.blocco(x, y);
+                logger(piano.blocco(x, y).to_string());
             }
             "B" => {
                 let x: i32 = parti[1].parse().unwrap();
                 let y: i32 = parti[2].parse().unwrap();
-                piano.bloccoOmogeneo(x, y);
+                logger(piano.bloccoOmogeneo(x, y).to_string());
             }
             "p" => {
                 let x: i32 = parti[1].parse().unwrap();
@@ -465,14 +473,18 @@ fn main() {
             "t" => {
                 let x: i32 = parti[1].parse().unwrap();
                 let y: i32 = parti[2].parse().unwrap();
-                piano.pista(x, y, parti[3..].join(" "));
+                if let Some(intensita) = piano.pista(x, y, parti[3..].join(" ")) {
+                    logger(intensita.to_string());
+                }
             }
             "L" => {
                 let x1: i32 = parti[1].parse().unwrap();
                 let y1: i32 = parti[2].parse().unwrap();
                 let x2: i32 = parti[3].parse().unwrap();
                 let y2: i32 = parti[4].parse().unwrap();
-                piano.lung(x1, y1, x2, y2);
+                if let Some(dist) = piano.lung(x1, y1, x2, y2) {
+                    logger(dist.to_string());
+                }
             }
             "i" => println!("TODO intensità"),
             "m" => println!("TODO perimetro"),
@@ -480,4 +492,8 @@ fn main() {
             _ => println!("che stai a fa"),
         }
     }
+}
+
+fn main() {
+    run(None, None)
 }
