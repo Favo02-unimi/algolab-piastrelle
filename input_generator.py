@@ -52,6 +52,18 @@ def pista(numPiste):
       print(f" {d}", end="")
     print()
 
+def lung(numLung):
+  for i in range(numLung):
+    x1 = random.randint(-bound, bound)
+    y1 = random.randint(-bound, bound)
+    if i % 2 == 0:
+      x2 = random.randint(x1-100, x1+100)
+      y2 = random.randint(y1-100, y1+100)
+    else:
+      x2 = random.randint(-bound, bound)
+      y2 = random.randint(-bound, bound)
+    print(f"L {x1} {y1} {x2} {y2}")
+
 colors = ["q", "w", "e", "r"]
 dirs = ["NN", "SS", "WW", "EE", "NE", "NO", "SE", "SO"]
 bound = 500
@@ -60,4 +72,5 @@ generaPiastrelle(500_000)
 generaRegole(1_000)
 blocco(1_000)
 propaga(1_000)
-pista(1000)
+pista(1_000)
+lung(10_000)

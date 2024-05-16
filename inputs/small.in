@@ -43,4 +43,9 @@ C 103 100 D
 t 100 100 EE NN
 t 100 100 EE NN EE
 t 2 2 EE SS SS
+L 3 0 1 4
+L 3 0 3 0
+L 0 0 3 0
+L 0 0 4 4
+L 3 4 4 4
 q
