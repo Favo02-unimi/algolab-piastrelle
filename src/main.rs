@@ -1,5 +1,3 @@
-#![allow(non_snake_case)]
-
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fs::File;
@@ -113,7 +111,7 @@ impl Piano {
     ///     * la somma dei coefficienti supera 8
     fn regola(&mut self, regola: String) {
         let parti: Vec<&str> = regola.split(' ').collect();
-        let mut sommaCoefficienti = 0;
+        let mut somma_coefficienti = 0;
 
         assert!(parti.len() > 2, "regola invalida (mancanza coefficienti)");
         assert!(parti.len() % 2 == 1, "regola invalida (coppie malformate)");
@@ -124,7 +122,7 @@ impl Piano {
             .step_by(2)
             .zip(parti.iter().skip(2).step_by(2))
             .map(|(coefficiente, colore)| {
-                sommaCoefficienti += coefficiente
+                somma_coefficienti += coefficiente
                     .parse::<u8>()
                     .expect("regola invalida (coefficiente invalido)");
 
@@ -136,7 +134,7 @@ impl Piano {
             .collect();
 
         assert!(
-            sommaCoefficienti <= 8,
+            somma_coefficienti <= 8,
             "regola invalida (somma coefficienti maggiore di 8)"
         );
 
@@ -192,46 +190,52 @@ impl Piano {
     /// * l'intensità totale e l'insieme delle piastrelle appartenenti al blocco
     ///     se la piastrella `x`, `y` è accesa
     /// * `0` e l'insieme vuoto se la piastrella `x`, `y` è spenta
-    fn _bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> (u32, HashSet<Piastrella>) {
+    fn _blocco_generico(&self, x: i32, y: i32, omogeneo: bool) -> (u32, HashSet<Piastrella>) {
         let start = Piastrella { x, y };
 
-        if !self.piastrelle.contains_key(&start) {
-            return (0, HashSet::new());
-        }
+        let Colorazione {
+            colore: colore_omogeneo,
+            intensita: mut totale,
+        } = match self.piastrelle.get(&start) {
+            Some(colorazione) => colorazione,
+            None => return (0, HashSet::new()),
+        };
 
         let mut coda = VecDeque::from([start.clone()]);
         let mut visitati = HashSet::from([start.clone()]);
-        let Colorazione {
-            colore: coloreOmogeneo,
-            intensita: mut totale,
-        } = &self.piastrelle.get(&start).unwrap();
 
         while !coda.is_empty() {
             let Piastrella { x: cx, y: cy } = coda.pop_front().unwrap();
+            let mut deltas: Vec<(i32, i32)> = Vec::new();
 
             for dy in -1..=1 {
                 for dx in -1..=1 {
-                    let adiacente = Piastrella {
-                        x: cx + dx,
-                        y: cy + dy,
-                    };
+                    deltas.push((dx, dy));
+                }
+            }
 
-                    if visitati.contains(&adiacente) {
-                        continue;
-                    }
-
+            deltas
+                .iter()
+                .map(|(dx, dy)| Piastrella {
+                    x: cx + dx,
+                    y: cy + dy,
+                })
+                .filter_map(|adiacente| {
                     if let Some(Colorazione { colore, intensita }) = self.piastrelle.get(&adiacente)
                     {
-                        if omogeneo && !colore.eq(coloreOmogeneo) {
-                            continue;
+                        if !omogeneo || colore.eq(colore_omogeneo) {
+                            return Some((adiacente.clone(), intensita));
                         }
-
+                    }
+                    None
+                })
+                .for_each(|(adiacente, intensita)| {
+                    if !visitati.contains(&adiacente) {
                         visitati.insert(adiacente.clone());
                         coda.push_back(adiacente.clone());
                         totale += intensita;
                     }
-                }
-            }
+                });
         }
 
         (totale, visitati)
@@ -248,7 +252,7 @@ impl Piano {
     /// * l'intensità totale se la piastrella `x`, `y` è accesa
     /// * `0` se la piastrella `x`, `y` è spenta
     fn blocco(&self, x: i32, y: i32) -> u32 {
-        let (totale, ..) = self._bloccoGenerico(x, y, false);
+        let (totale, ..) = self._blocco_generico(x, y, false);
         totale
     }
 
@@ -262,12 +266,12 @@ impl Piano {
     /// # Returns
     /// * l'intensità totale se la piastrella `x`, `y` è accesa
     /// * `0` se la piastrella `x`, `y` è spenta
-    fn bloccoOmogeneo(&self, x: i32, y: i32) -> u32 {
-        let (totale, ..) = self._bloccoGenerico(x, y, true);
+    fn blocco_omogeneo(&self, x: i32, y: i32) -> u32 {
+        let (totale, ..) = self._blocco_generico(x, y, true);
         totale
     }
 
-    fn propagaGenerico(&self, x: i32, y: i32) -> Option<(i32, i32, usize, String)> {
+    fn propaga_generico(&self, x: i32, y: i32) -> Option<(i32, i32, usize, String)> {
         let mut intorno: HashMap<String, u8> = HashMap::new();
 
         for dy in -1..=1 {
@@ -289,7 +293,7 @@ impl Piano {
             i,
             Regola {
                 requisiti,
-                colore: coloreTarget,
+                colore: colore_target,
                 ..
             },
         ) in self.regole.iter().enumerate()
@@ -303,14 +307,14 @@ impl Piano {
                     continue 'regole; // continue outer loop, skipping return
                 }
             }
-            return Some((x, y, i, coloreTarget.clone()));
+            return Some((x, y, i, colore_target.clone()));
         }
 
         None
     }
 
     fn propaga(&mut self, x: i32, y: i32) {
-        if let Some((x, y, i, colore)) = self.propagaGenerico(x, y) {
+        if let Some((x, y, i, colore)) = self.propaga_generico(x, y) {
             self.piastrelle.insert(
                 Piastrella { x, y },
                 Colorazione {
@@ -322,12 +326,12 @@ impl Piano {
         }
     }
 
-    fn propagaBlocco(&mut self, x: i32, y: i32) {
-        let (.., visitati) = self._bloccoGenerico(x, y, false);
+    fn propaga_blocco(&mut self, x: i32, y: i32) {
+        let (.., visitati) = self._blocco_generico(x, y, false);
         let mut applicazioni: Vec<(i32, i32, usize, String)> = Vec::new();
 
         for Piastrella { x, y } in visitati {
-            if let Some(applicazione) = self.propagaGenerico(x, y) {
+            if let Some(applicazione) = self.propaga_generico(x, y) {
                 applicazioni.push(applicazione)
             }
         }
@@ -352,7 +356,7 @@ impl Piano {
         let mut cx = x;
         let mut cy = y;
 
-        let mut totaleIntensita: u32 = match self.piastrelle.get(&Piastrella { x, y }) {
+        let mut totale_intensita: u32 = match self.piastrelle.get(&Piastrella { x, y }) {
             Some(Colorazione { intensita, .. }) => *intensita,
             None => return None,
         };
@@ -371,25 +375,25 @@ impl Piano {
             };
 
             match self.piastrelle.get(&Piastrella { x: cx, y: cy }) {
-                Some(Colorazione { intensita, .. }) => totaleIntensita += intensita,
+                Some(Colorazione { intensita, .. }) => totale_intensita += intensita,
                 None => return None,
             }
         }
 
-        Some(totaleIntensita)
+        Some(totale_intensita)
     }
 
     fn lung(&self, x1: i32, y1: i32, x2: i32, y2: i32) -> Option<u32> {
-        let startDist = match self.piastrelle.get(&Piastrella { x: x1, y: y1 }) {
+        let start_dist = match self.piastrelle.get(&Piastrella { x: x1, y: y1 }) {
             Some(Colorazione { intensita, .. }) => intensita,
             None => return None,
         };
 
         if x1 == x2 && y1 == y2 {
-            return Some(*startDist);
+            return Some(*start_dist);
         }
 
-        let mut coda = BinaryHeap::from([Reverse((*startDist, x1, y1))]);
+        let mut coda = BinaryHeap::from([Reverse((*start_dist, x1, y1))]);
         let mut visitati: HashSet<Piastrella> = HashSet::from([Piastrella { x: x1, y: y1 }]);
 
         while !coda.is_empty() {
@@ -500,7 +504,7 @@ fn run(input: Option<String>, output: Option<String>) {
                 assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
-                logger(piano.bloccoOmogeneo(x, y).to_string());
+                logger(piano.blocco_omogeneo(x, y).to_string());
             }
             "p" => {
                 assert!(parti.len() == 3, "input non valido");
@@ -512,7 +516,7 @@ fn run(input: Option<String>, output: Option<String>) {
                 assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
-                piano.propagaBlocco(x, y);
+                piano.propaga_blocco(x, y);
             }
             "o" => {
                 assert!(parti.len() == 1, "input non valido");
