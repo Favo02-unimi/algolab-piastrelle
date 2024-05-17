@@ -517,5 +517,5 @@ fn main() {
 }
 
 #[cfg(test)]
-mod tests;
+mod io_tests;
 mod unit_tests;
