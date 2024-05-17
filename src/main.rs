@@ -497,3 +497,6 @@ fn run(input: Option<String>, output: Option<String>) {
 fn main() {
     run(None, None)
 }
+
+#[cfg(test)]
+mod tests;
