@@ -61,20 +61,18 @@ impl Piano {
     /// # Arguments
     /// * `x` - ascisse della piastrella da colorare
     /// * `y` - ordinate della piastrella da colorare
-    /// * `colore` - colore di cui colorare la piastrella
+    /// * `colore` - colore della piastrella
+    /// * `intensita` - intensità della piastrella
     ///
     /// # Panics
     /// * se `colore` è una stringa vuota
-    fn colora(&mut self, x: i32, y: i32, colore: String) {
-        assert!(!colore.is_empty());
+    /// * se `intensita` è minore o uguale a 0
+    fn colora(&mut self, x: i32, y: i32, colore: String, intensita: u32) {
+        assert!(!colore.is_empty(), "colore non valido");
+        assert!(intensita > 0, "intensità non valida");
 
-        self.piastrelle.insert(
-            Piastrella { x, y },
-            Colorazione {
-                intensita: 1,
-                colore,
-            },
-        );
+        self.piastrelle
+            .insert(Piastrella { x, y }, Colorazione { intensita, colore });
     }
 
     /// Spegne una piastrella indicata da `x` e `y`, modificando il Piano
@@ -152,8 +150,8 @@ impl Piano {
     /// Restituisce le regole di propagazione (`Regole`) contenute nel piano nel formato
     /// ```format
     /// (
-    /// colore coeff1 col1 coeff2 col2 ...
-    /// colore coeff1 col1 coeff2 col2 coeff3 col3
+    /// colore: coeff1 col1 coeff2 col2 ...
+    /// colore: coeff1 col1 coeff2 col2 coeff3 col3
     /// ...
     /// )
     /// ```
@@ -166,7 +164,7 @@ impl Piano {
             |Regola {
                  requisiti, colore, ..
              }| {
-                result.push_str(colore);
+                result.push_str(&format!("{colore}:"));
                 requisiti.iter().for_each(
                     |Requisito {
                          coefficiente,
@@ -431,24 +429,25 @@ fn run(input: Option<String>, output: Option<String>) {
 
         match parti[0] {
             "C" => {
-                assert!(parti.len() == 4);
+                assert!(parti.len() == 5, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 let colore: String = String::from(parti[3]);
-                piano.colora(x, y, colore);
+                let i: u32 = parti[4].parse().expect("input non valido");
+                piano.colora(x, y, colore, i);
             }
             "S" => {
-                assert!(parti.len() == 3);
+                assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 piano.spegni(x, y);
             }
             "r" => {
-                assert!(parti.len() > 1);
+                assert!(parti.len() > 1, "input non valido");
                 piano.regola(parti[1..].join(" "));
             }
             "?" => {
-                assert!(parti.len() == 3);
+                assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 if let Some(Colorazione { colore, intensita }) = piano.stato(x, y) {
@@ -456,39 +455,39 @@ fn run(input: Option<String>, output: Option<String>) {
                 }
             }
             "s" => {
-                assert!(parti.len() == 1);
+                assert!(parti.len() == 1, "input non valido");
                 logger(piano.stampa());
             }
             "b" => {
-                assert!(parti.len() == 3);
+                assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 logger(piano.blocco(x, y).to_string());
             }
             "B" => {
-                assert!(parti.len() == 3);
+                assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 logger(piano.bloccoOmogeneo(x, y).to_string());
             }
             "p" => {
-                assert!(parti.len() == 3);
+                assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 piano.propaga(x, y);
             }
             "P" => {
-                assert!(parti.len() == 3);
+                assert!(parti.len() == 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 piano.propagaBlocco(x, y);
             }
             "o" => {
-                assert!(parti.len() == 1);
+                assert!(parti.len() == 1, "input non valido");
                 piano.ordina();
             }
             "t" => {
-                assert!(parti.len() > 3);
+                assert!(parti.len() > 3, "input non valido");
                 let x: i32 = parti[1].parse().expect("input non valido");
                 let y: i32 = parti[2].parse().expect("input non valido");
                 if let Some(intensita) = piano.pista(x, y, parti[3..].join(" ")) {
@@ -496,7 +495,7 @@ fn run(input: Option<String>, output: Option<String>) {
                 }
             }
             "L" => {
-                assert!(parti.len() == 5);
+                assert!(parti.len() == 5, "input non valido");
                 let x1: i32 = parti[1].parse().expect("input non valido");
                 let y1: i32 = parti[2].parse().expect("input non valido");
                 let x2: i32 = parti[3].parse().expect("input non valido");

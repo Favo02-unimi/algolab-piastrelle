@@ -7,7 +7,7 @@ mod stato_colora_spegni {
     fn test_colora() {
         let mut piano = Piano::new();
 
-        piano.colora(1, 1, String::from("rosso"));
+        piano.colora(1, 1, String::from("rosso"), 3);
 
         let res = piano.stato(1, 1);
         assert!(res.is_some());
@@ -15,7 +15,7 @@ mod stato_colora_spegni {
             res.unwrap(),
             Colorazione {
                 colore: String::from("rosso"),
-                intensita: 1
+                intensita: 3
             }
         );
 
@@ -23,11 +23,19 @@ mod stato_colora_spegni {
     }
 
     #[test]
+    #[should_panic(expected = "intensità non valida")]
+    fn test_colora_invalido() {
+        let mut piano = Piano::new();
+
+        piano.colora(1, 1, String::from("rosso"), 0);
+    }
+
+    #[test]
     fn test_ricolora() {
         let mut piano = Piano::new();
 
-        piano.colora(1, 1, String::from("rosso"));
-        piano.colora(1, 1, String::from("verde"));
+        piano.colora(1, 1, String::from("rosso"), 5);
+        piano.colora(1, 1, String::from("verde"), 2);
 
         let res = piano.stato(1, 1);
         assert!(res.is_some());
@@ -35,7 +43,7 @@ mod stato_colora_spegni {
             res.unwrap(),
             Colorazione {
                 colore: String::from("verde"),
-                intensita: 1
+                intensita: 2
             }
         );
     }
@@ -46,7 +54,7 @@ mod stato_colora_spegni {
 
         assert!(piano.stato(1, 1).is_none());
 
-        piano.colora(1, 1, String::from("rosso"));
+        piano.colora(1, 1, String::from("rosso"), 10);
 
         let res = piano.stato(1, 1);
         assert!(res.is_some());
@@ -54,7 +62,7 @@ mod stato_colora_spegni {
             res.unwrap(),
             Colorazione {
                 colore: String::from("rosso"),
-                intensita: 1
+                intensita: 10
             }
         );
 
@@ -65,7 +73,7 @@ mod stato_colora_spegni {
     fn test_colora_negativo() {
         let mut piano = Piano::new();
 
-        piano.colora(-1, -1, String::from("rosso"));
+        piano.colora(-1, -1, String::from("rosso"), 8);
 
         let res = piano.stato(-1, -1);
         assert!(res.is_some());
@@ -73,7 +81,7 @@ mod stato_colora_spegni {
             res.unwrap(),
             Colorazione {
                 colore: String::from("rosso"),
-                intensita: 1
+                intensita: 8
             }
         );
 
@@ -84,7 +92,7 @@ mod stato_colora_spegni {
     fn test_spegni() {
         let mut piano = Piano::new();
 
-        piano.colora(-1, -1, String::from("rosso"));
+        piano.colora(-1, -1, String::from("rosso"), 5);
         piano.spegni(-1, -1);
 
         assert!(piano.stato(-1, -1).is_none());
@@ -146,13 +154,13 @@ mod regola_stampa {
         piano.regola(String::from("rosso 1 verde 2 rosso 3 fucsia"));
         assert_eq!(
             piano.stampa(),
-            String::from("(\nrosso 1 verde 2 rosso 3 fucsia\n)")
+            String::from("(\nrosso: 1 verde 2 rosso 3 fucsia\n)")
         );
 
         piano.regola(String::from("verde 8 blu"));
         assert_eq!(
             piano.stampa(),
-            String::from("(\nrosso 1 verde 2 rosso 3 fucsia\nverde 8 blu\n)")
+            String::from("(\nrosso: 1 verde 2 rosso 3 fucsia\nverde: 8 blu\n)")
         );
     }
 
