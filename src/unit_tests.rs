@@ -207,9 +207,8 @@ mod regola_stampa {
     }
 }
 
-/// Test per le funzioni `_bloccoGenerico`, `blocco`, `bloccoOmogeneo`
+/// Test per le funzioni `_blocco_generico`, `blocco`, `blocco_omogeneo`
 mod blocco {
-
     #[cfg(test)]
     use crate::*;
 
@@ -329,5 +328,114 @@ mod blocco {
         piano.colora(0, 0, String::from("r"), 1);
         assert_ne!(piano._blocco_generico(0, 0, true), (0, HashSet::new()));
         assert_ne!(piano._blocco_generico(0, 0, false), (0, HashSet::new()));
+    }
+}
+
+/// Test per le funzioni `_propaga_generico`, `propaga`, `propaga_blocco`
+mod propaga {
+    #[cfg(test)]
+    use crate::*;
+
+    #[test]
+    fn test_propaga() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("g"), 1);
+        piano.colora(0, 2, String::from("b"), 1);
+        piano.colora(1, 1, String::from("g"), 1);
+        piano.colora(1, 3, String::from("r"), 1);
+        piano.colora(1, 4, String::from("b"), 1);
+        piano.colora(2, 0, String::from("b"), 1);
+        piano.colora(2, 2, String::from("b"), 1);
+        piano.colora(3, 0, String::from("b"), 1);
+        piano.colora(3, 1, String::from("r"), 1);
+        piano.colora(3, 2, String::from("b"), 1);
+        piano.colora(3, 4, String::from("r"), 1);
+        piano.colora(4, 4, String::from("r"), 1);
+
+        piano.regola(String::from("z 2 g 1 b"));
+        piano.regola(String::from("w 1 g 2 b"));
+        piano.regola(String::from("y 1 b 1 r"));
+        piano.regola(String::from("g 2 b 1 r"));
+        piano.regola(String::from("t 1 b 1 g 1 r"));
+
+        piano.propaga(1, 1);
+        assert!(piano
+            .regole
+            .iter()
+            .map(|Regola { utilizzo, .. }| *utilizzo)
+            .eq(vec![0, 1, 0, 0, 0]));
+        assert!(piano.stato(1, 1).is_some());
+        assert_eq!(piano.stato(1, 1).unwrap().colore, String::from("w"));
+
+        piano.propaga(3, 3);
+        assert!(piano
+            .regole
+            .iter()
+            .map(|Regola { utilizzo, .. }| *utilizzo)
+            .eq(vec![0, 1, 1, 0, 0]));
+        assert!(piano.stato(3, 3).is_some());
+        assert_eq!(piano.stato(3, 3).unwrap().colore, String::from("y"));
+    }
+
+    #[test]
+    fn test_propaga_blocco() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("g"), 1);
+        piano.colora(0, 2, String::from("b"), 1);
+        piano.colora(1, 1, String::from("g"), 1);
+        piano.colora(1, 3, String::from("r"), 1);
+        piano.colora(1, 4, String::from("b"), 1);
+        piano.colora(2, 0, String::from("b"), 1);
+        piano.colora(2, 2, String::from("b"), 1);
+        piano.colora(3, 0, String::from("b"), 1);
+        piano.colora(3, 1, String::from("r"), 1);
+        piano.colora(3, 2, String::from("b"), 1);
+        piano.colora(3, 4, String::from("r"), 1);
+        piano.colora(4, 4, String::from("r"), 1);
+
+        piano.regola(String::from("z 2 g 1 b"));
+        piano.regola(String::from("w 1 g 2 b"));
+        piano.regola(String::from("y 1 b 1 r"));
+        piano.regola(String::from("g 2 b 1 r"));
+        piano.regola(String::from("t 1 b 1 g 1 r"));
+
+        piano.propaga_blocco(1, 1);
+        assert!(piano
+            .regole
+            .iter()
+            .map(|Regola { utilizzo, .. }| *utilizzo)
+            .eq(vec![0, 1, 4, 0, 0]));
+        assert!(piano.stato(1, 1).is_some());
+        assert_eq!(piano.stato(1, 1).unwrap().colore, String::from("w"));
+        assert!(piano.stato(2, 0).is_some());
+        assert_eq!(piano.stato(2, 0).unwrap().colore, String::from("y"));
+        assert!(piano.stato(2, 2).is_some());
+        assert_eq!(piano.stato(2, 2).unwrap().colore, String::from("y"));
+        assert!(piano.stato(3, 0).is_some());
+        assert_eq!(piano.stato(3, 0).unwrap().colore, String::from("y"));
+        assert!(piano.stato(2, 0).is_some());
+        assert_eq!(piano.stato(2, 0).unwrap().colore, String::from("y"));
+        assert!(piano.stato(3, 2).is_some());
+        assert_eq!(piano.stato(3, 2).unwrap().colore, String::from("y"));
+    }
+
+    #[test]
+    fn test_propaga_vuoto() {
+        let mut piano = Piano::new();
+
+        piano.regola(String::from("z 2 g 1 b"));
+        piano.regola(String::from("w 1 g 2 b"));
+        piano.regola(String::from("y 1 b 1 r"));
+        piano.regola(String::from("g 2 b 1 r"));
+        piano.regola(String::from("t 1 b 1 g 1 r"));
+
+        piano.propaga_blocco(1, 1);
+        piano.propaga_blocco(0, 0);
+        piano.propaga_blocco(-10, 30);
+        assert!(piano
+            .regole
+            .iter()
+            .map(|Regola { utilizzo, .. }| *utilizzo)
+            .eq(vec![0, 0, 0, 0, 0]));
     }
 }

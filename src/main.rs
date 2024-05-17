@@ -271,7 +271,7 @@ impl Piano {
         totale
     }
 
-    fn propaga_generico(&self, x: i32, y: i32) -> Option<(i32, i32, usize, String)> {
+    fn _propaga_generico(&self, x: i32, y: i32) -> Option<(i32, i32, usize, String)> {
         let mut intorno: HashMap<String, u8> = HashMap::new();
 
         for dy in -1..=1 {
@@ -314,7 +314,7 @@ impl Piano {
     }
 
     fn propaga(&mut self, x: i32, y: i32) {
-        if let Some((x, y, i, colore)) = self.propaga_generico(x, y) {
+        if let Some((x, y, i, colore)) = self._propaga_generico(x, y) {
             self.piastrelle.insert(
                 Piastrella { x, y },
                 Colorazione {
@@ -331,7 +331,7 @@ impl Piano {
         let mut applicazioni: Vec<(i32, i32, usize, String)> = Vec::new();
 
         for Piastrella { x, y } in visitati {
-            if let Some(applicazione) = self.propaga_generico(x, y) {
+            if let Some(applicazione) = self._propaga_generico(x, y) {
                 applicazioni.push(applicazione)
             }
         }
