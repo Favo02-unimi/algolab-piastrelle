@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 
 /// Piastrella rappresentata da x e y
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct Piastrella {
     x: i32,
     y: i32,
@@ -180,7 +180,19 @@ impl Piano {
         result
     }
 
-    fn bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> (u32, HashSet<Piastrella>) {
+    /// Restituisce l'intensità totale e le piastrelle nel blocco della piastrella
+    /// individuata da `x` e `y`
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella
+    /// * `y` - ordinate della piastrella
+    /// * `omogeneo` - se il blocco deve essere omogeneo
+    ///
+    /// # Returns
+    /// * l'intensità totale e l'insieme delle piastrelle appartenenti al blocco
+    ///     se la piastrella `x`, `y` è accesa
+    /// * `0` e l'insieme vuoto se la piastrella `x`, `y` è spenta
+    fn _bloccoGenerico(&self, x: i32, y: i32, omogeneo: bool) -> (u32, HashSet<Piastrella>) {
         let start = Piastrella { x, y };
 
         if !self.piastrelle.contains_key(&start) {
@@ -225,13 +237,33 @@ impl Piano {
         (totale, visitati)
     }
 
+    /// Restituisce l'intensità totale della piastrelle nel blocco **non** omogeneo
+    /// della piastrella individuata da `x` e `y`
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella
+    /// * `y` - ordinate della piastrella
+    ///
+    /// # Returns
+    /// * l'intensità totale se la piastrella `x`, `y` è accesa
+    /// * `0` se la piastrella `x`, `y` è spenta
     fn blocco(&self, x: i32, y: i32) -> u32 {
-        let (totale, ..) = self.bloccoGenerico(x, y, false);
+        let (totale, ..) = self._bloccoGenerico(x, y, false);
         totale
     }
 
+    /// Restituisce l'intensità totale della piastrelle nel blocco **omogeneo**
+    /// della piastrella individuata da `x` e `y`
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella
+    /// * `y` - ordinate della piastrella
+    ///
+    /// # Returns
+    /// * l'intensità totale se la piastrella `x`, `y` è accesa
+    /// * `0` se la piastrella `x`, `y` è spenta
     fn bloccoOmogeneo(&self, x: i32, y: i32) -> u32 {
-        let (totale, ..) = self.bloccoGenerico(x, y, true);
+        let (totale, ..) = self._bloccoGenerico(x, y, true);
         totale
     }
 
@@ -291,7 +323,7 @@ impl Piano {
     }
 
     fn propagaBlocco(&mut self, x: i32, y: i32) {
-        let (.., visitati) = self.bloccoGenerico(x, y, false);
+        let (.., visitati) = self._bloccoGenerico(x, y, false);
         let mut applicazioni: Vec<(i32, i32, usize, String)> = Vec::new();
 
         for Piastrella { x, y } in visitati {

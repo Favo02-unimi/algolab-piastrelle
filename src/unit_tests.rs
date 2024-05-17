@@ -206,3 +206,128 @@ mod regola_stampa {
         piano.regola(String::from("rosso uno verde 3 blu"));
     }
 }
+
+/// Test per le funzioni `_bloccoGenerico`, `blocco`, `bloccoOmogeneo`
+mod blocco {
+
+    #[cfg(test)]
+    use crate::*;
+
+    #[test]
+    fn test_blocco() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("r"), 2);
+        piano.colora(1, 0, String::from("r"), 4);
+        piano.colora(1, 1, String::from("r"), 5);
+
+        let expected = (
+            11,
+            HashSet::from([
+                Piastrella { x: 0, y: 0 },
+                Piastrella { x: 1, y: 0 },
+                Piastrella { x: 1, y: 1 },
+            ]),
+        );
+        assert_eq!(&piano._bloccoGenerico(0, 0, false), &expected);
+        assert_eq!(piano.blocco(0, 0), 11);
+
+        piano.colora(0, 0, String::from("a"), 2);
+        piano.colora(1, 0, String::from("b"), 4);
+        piano.colora(1, 1, String::from("c"), 5);
+
+        assert_eq!(&piano._bloccoGenerico(0, 0, false), &expected);
+        assert_eq!(piano.blocco(0, 0), 11);
+    }
+
+    #[test]
+    fn test_blocco_omogeneo() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("r"), 2);
+        piano.colora(1, 0, String::from("r"), 4);
+        piano.colora(1, 1, String::from("r"), 5);
+
+        let expected = (
+            11,
+            HashSet::from([
+                Piastrella { x: 0, y: 0 },
+                Piastrella { x: 1, y: 0 },
+                Piastrella { x: 1, y: 1 },
+            ]),
+        );
+        assert_eq!(&piano._bloccoGenerico(0, 0, true), &expected);
+        assert_eq!(piano.bloccoOmogeneo(0, 0), 11);
+
+        piano.colora(0, 0, String::from("a"), 2);
+        piano.colora(1, 0, String::from("b"), 4);
+        piano.colora(1, 1, String::from("c"), 5);
+
+        let expected = (2, HashSet::from([Piastrella { x: 0, y: 0 }]));
+        assert_eq!(&piano._bloccoGenerico(0, 0, true), &expected);
+        assert_eq!(piano.bloccoOmogeneo(0, 0), 2);
+    }
+
+    #[test]
+    fn test_piastrelle_stesso_blocco() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("r"), 2);
+        piano.colora(1, 0, String::from("r"), 3);
+        piano.colora(1, 1, String::from("r"), 5);
+
+        assert_eq!(
+            piano._bloccoGenerico(0, 0, true),
+            piano._bloccoGenerico(0, 0, false)
+        );
+        assert_eq!(
+            piano._bloccoGenerico(0, 0, true),
+            piano._bloccoGenerico(1, 1, true)
+        );
+        assert_eq!(
+            piano._bloccoGenerico(0, 0, false),
+            piano._bloccoGenerico(1, 1, false)
+        );
+        assert_eq!(
+            piano._bloccoGenerico(0, 0, true),
+            piano._bloccoGenerico(1, 1, false)
+        );
+
+        piano.colora(0, 0, String::from("r"), 2);
+        piano.colora(1, 0, String::from("b"), 3);
+        piano.colora(1, 1, String::from("r"), 5);
+
+        assert_ne!(
+            piano._bloccoGenerico(0, 0, true),
+            piano._bloccoGenerico(0, 0, false)
+        );
+    }
+
+    #[test]
+    fn test_piastrelle_blocco_diverso() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("r"), 2);
+        piano.colora(1, 0, String::from("r"), 3);
+        piano.colora(2, 2, String::from("r"), 5);
+
+        assert_ne!(
+            piano._bloccoGenerico(0, 0, true),
+            piano._bloccoGenerico(2, 2, true)
+        );
+        assert_ne!(
+            piano._bloccoGenerico(0, 0, false),
+            piano._bloccoGenerico(2, 2, false)
+        );
+    }
+
+    #[test]
+    fn test_blocco_spento() {
+        let mut piano = Piano::new();
+        piano.colora(-1, -1, String::from("r"), 2);
+        piano.colora(1, 1, String::from("r"), 5);
+
+        assert_eq!(piano._bloccoGenerico(0, 0, true), (0, HashSet::new()));
+        assert_eq!(piano._bloccoGenerico(0, 0, false), (0, HashSet::new()));
+
+        piano.colora(0, 0, String::from("r"), 1);
+        assert_ne!(piano._bloccoGenerico(0, 0, true), (0, HashSet::new()));
+        assert_ne!(piano._bloccoGenerico(0, 0, false), (0, HashSet::new()));
+    }
+}
