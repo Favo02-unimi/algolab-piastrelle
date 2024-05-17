@@ -42,6 +42,17 @@ struct Piano {
 
 /// Implementazione metodi per Piano
 impl Piano {
+    /// Crea un nuovo piano vuoto, senza piastrelle e senza regole
+    ///
+    /// # Returns
+    /// * un `Piano` vuoto
+    fn new() -> Self {
+        Self {
+            piastrelle: HashMap::new(),
+            regole: Vec::new(),
+        }
+    }
+
     /// Colora una piastrella indicata da `x` e `y`, impostando il suo `colore`
     /// e la sua `intensita` a 1, modificando il Piano
     ///
@@ -383,10 +394,7 @@ impl Piano {
 }
 
 fn run(input: Option<String>, output: Option<String>) {
-    let mut piano = Piano {
-        piastrelle: HashMap::new(),
-        regole: Vec::new(),
-    };
+    let mut piano = Piano::new();
 
     let input: Box<dyn BufRead> = match input {
         Some(filename) => match File::open(filename) {
