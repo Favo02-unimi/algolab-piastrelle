@@ -431,64 +431,76 @@ fn run(input: Option<String>, output: Option<String>) {
 
         match parti[0] {
             "C" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 4);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 let colore: String = String::from(parti[3]);
                 piano.colora(x, y, colore);
             }
             "S" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 piano.spegni(x, y);
             }
             "r" => {
+                assert!(parti.len() > 1);
                 piano.regola(parti[1..].join(" "));
             }
             "?" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 if let Some(Colorazione { colore, intensita }) = piano.stato(x, y) {
                     logger(format!("{} {}", colore, intensita));
                 }
             }
             "s" => {
+                assert!(parti.len() == 1);
                 logger(piano.stampa());
             }
             "b" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 logger(piano.blocco(x, y).to_string());
             }
             "B" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 logger(piano.bloccoOmogeneo(x, y).to_string());
             }
             "p" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 piano.propaga(x, y);
             }
             "P" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() == 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 piano.propagaBlocco(x, y);
             }
             "o" => {
+                assert!(parti.len() == 1);
                 piano.ordina();
             }
             "t" => {
-                let x: i32 = parti[1].parse().unwrap();
-                let y: i32 = parti[2].parse().unwrap();
+                assert!(parti.len() > 3);
+                let x: i32 = parti[1].parse().expect("input non valido");
+                let y: i32 = parti[2].parse().expect("input non valido");
                 if let Some(intensita) = piano.pista(x, y, parti[3..].join(" ")) {
                     logger(intensita.to_string());
                 }
             }
             "L" => {
-                let x1: i32 = parti[1].parse().unwrap();
-                let y1: i32 = parti[2].parse().unwrap();
-                let x2: i32 = parti[3].parse().unwrap();
-                let y2: i32 = parti[4].parse().unwrap();
+                assert!(parti.len() == 5);
+                let x1: i32 = parti[1].parse().expect("input non valido");
+                let y1: i32 = parti[2].parse().expect("input non valido");
+                let x2: i32 = parti[3].parse().expect("input non valido");
+                let y2: i32 = parti[4].parse().expect("input non valido");
                 if let Some(dist) = piano.lung(x1, y1, x2, y2) {
                     logger(dist.to_string());
                 }
