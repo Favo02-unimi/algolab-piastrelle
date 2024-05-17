@@ -418,7 +418,7 @@ fn run(input: Option<String>, output: Option<String>) {
                 }
             }
             None => {
-                println!("{}", s);
+                print!("{}", s);
             }
         }
     };

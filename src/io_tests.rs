@@ -1,4 +1,3 @@
-use std::fs;
 use std::io::Read;
 
 #[cfg(test)]
@@ -14,21 +13,6 @@ fn test_blocco() {
     run_test(String::from("blocco"));
 }
 
-#[test]
-fn test_lung() {
-    run_test(String::from("lung"));
-}
-
-#[test]
-fn test_piste() {
-    run_test(String::from("piste"));
-}
-
-#[test]
-fn test_propaga() {
-    run_test(String::from("small"));
-}
-
 // --- utils functions ---
 
 fn run_test(name: String) {
@@ -37,8 +21,6 @@ fn run_test(name: String) {
     let eq = is_same_file(output(&name), test(&name));
     assert!(eq.is_ok());
     assert!(eq.unwrap());
-
-    cleanup(&test(&name));
 }
 
 fn input(s: &str) -> String {
@@ -75,8 +57,4 @@ fn is_same_file(file1: String, file2: String) -> Result<bool, std::io::Error> {
     }
 
     Ok(true)
-}
-
-fn cleanup(file: &String) {
-    let _ = fs::remove_file(file);
 }

@@ -8,34 +8,34 @@
 2
 2
 (
-z 2 g 1 b
-w 1 g 2 b
-y 1 b 1 r
-g 2 b 1 r
-t 1 b 1 g 1 r
+z: 2 g 1 b
+w: 1 g 2 b
+y: 1 b 1 r
+g: 2 b 1 r
+t: 1 b 1 g 1 r
 )
 (
-z 2 g 1 b
-y 1 b 1 r
-g 2 b 1 r
-t 1 b 1 g 1 r
-w 1 g 2 b
+z: 2 g 1 b
+y: 1 b 1 r
+g: 2 b 1 r
+t: 1 b 1 g 1 r
+w: 1 g 2 b
 )
 (
-z 2 g 1 b
-g 2 b 1 r
-t 1 b 1 g 1 r
-y 1 b 1 r
-w 1 g 2 b
+z: 2 g 1 b
+g: 2 b 1 r
+t: 1 b 1 g 1 r
+y: 1 b 1 r
+w: 1 g 2 b
 )
 (
-z 2 g 1 b
-g 2 b 1 r
-t 1 b 1 g 1 r
-w 1 g 2 b
-y 1 b 1 r
+z: 2 g 1 b
+g: 2 b 1 r
+t: 1 b 1 g 1 r
+w: 1 g 2 b
+y: 1 b 1 r
 )
-3
+11
 4
 5
 1

@@ -6,7 +6,8 @@ def generaPiastrelle(numPiastrelle):
     x = random.randint(-bound, bound)
     y = random.randint(-bound, bound)
     c = colors[random.randint(0, len(colors)-1)]
-    print(f"C {x} {y} {c}")
+    i = random.randint(1, 1_000)
+    print(f"C {x} {y} {c} {i}")
 
 def generaRegole(numRegole):
   for _ in range(numRegole):
@@ -69,8 +70,8 @@ dirs = ["NN", "SS", "WW", "EE", "NE", "NO", "SE", "SO"]
 bound = 500
 
 generaPiastrelle(500_000)
-generaRegole(1_000)
+# generaRegole(1_000)
 blocco(1_000)
-propaga(1_000)
-pista(1_000)
-lung(10_000)
+# propaga(1_000)
+# pista(1_000)
+# lung(10_000)
