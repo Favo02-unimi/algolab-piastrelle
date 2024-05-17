@@ -20,12 +20,14 @@ struct Colorazione {
 }
 
 /// Requisito di una regola: un coefficiente da 0 a 8 e un colore
+#[derive(PartialEq, Debug)]
 struct Requisito {
     coefficiente: u8,
     colore: String,
 }
 
 /// Regola: dei requisiti, un colore "finale" e il suo utilizzo
+#[derive(PartialEq, Debug)]
 struct Regola {
     requisiti: Vec<Requisito>,
     colore: String,
@@ -124,12 +126,9 @@ impl Piano {
             .step_by(2)
             .zip(parti.iter().skip(2).step_by(2))
             .map(|(coefficiente, colore)| {
-                assert!(
-                    coefficiente.parse::<u8>().is_ok(),
-                    "regola invalida (coefficiente invalido)"
-                );
-
-                sommaCoefficienti += coefficiente.parse::<u8>().unwrap();
+                sommaCoefficienti += coefficiente
+                    .parse::<u8>()
+                    .expect("regola invalida (coefficiente invalido)");
 
                 Requisito {
                     coefficiente: coefficiente.parse().unwrap(),
@@ -508,3 +507,4 @@ fn main() {
 
 #[cfg(test)]
 mod tests;
+mod unit_tests;
