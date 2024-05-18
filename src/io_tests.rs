@@ -6,6 +6,8 @@ use crate::*;
 #[test]
 fn test_small() {
     run_test(String::from("small"));
+    run_test(String::from("small2"));
+    run_test(String::from("small3"));
 }
 
 #[test]
