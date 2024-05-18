@@ -193,13 +193,6 @@ mod regola_stampa {
     }
 
     #[test]
-    #[should_panic(expected = "regola invalida (somma coefficienti maggiore di 8)")]
-    fn test_regola_invalida5() {
-        let mut piano = Piano::new();
-        piano.regola(String::from("rosso 1 verde 3 blu 5 fucsia"));
-    }
-
-    #[test]
     #[should_panic(expected = "regola invalida (coefficiente invalido)")]
     fn test_regola_invalida6() {
         let mut piano = Piano::new();

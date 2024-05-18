@@ -40,6 +40,17 @@ struct Piano {
     regole: Vec<Regola>,
 }
 
+const ADIACENTI: [(i32, i32); 8] = [
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+];
+
 /// Implementazione metodi per Piano
 impl Piano {
     /// Crea un nuovo piano vuoto, senza piastrelle e senza regole
@@ -107,11 +118,9 @@ impl Piano {
     /// * se la regola è malformata:
     ///     * mancano del tutto i coefficienti
     ///     * i coefficienti non sono accoppiati ad un colore
-    ///     * tutti i coefficienti sono numerici
-    ///     * la somma dei coefficienti supera 8
+    ///     * non tutti i coefficienti sono numerici
     fn regola(&mut self, regola: String) {
         let parti: Vec<&str> = regola.split(' ').collect();
-        let mut somma_coefficienti = 0;
 
         assert!(parti.len() > 2, "regola invalida (mancanza coefficienti)");
         assert!(parti.len() % 2 == 1, "regola invalida (coppie malformate)");
@@ -121,22 +130,13 @@ impl Piano {
             .skip(1)
             .step_by(2)
             .zip(parti.iter().skip(2).step_by(2))
-            .map(|(coefficiente, colore)| {
-                somma_coefficienti += coefficiente
-                    .parse::<u8>()
-                    .expect("regola invalida (coefficiente invalido)");
-
-                Requisito {
-                    coefficiente: coefficiente.parse().unwrap(),
-                    colore: String::from(*colore),
-                }
+            .map(|(coefficiente, colore)| Requisito {
+                coefficiente: coefficiente
+                    .parse()
+                    .expect("regola invalida (coefficiente invalido)"),
+                colore: String::from(*colore),
             })
             .collect();
-
-        assert!(
-            somma_coefficienti <= 8,
-            "regola invalida (somma coefficienti maggiore di 8)"
-        );
 
         self.regole.push(Regola {
             requisiti,
@@ -195,7 +195,7 @@ impl Piano {
 
         let Colorazione {
             colore: colore_omogeneo,
-            intensita: mut totale,
+            intensita: mut totale, // inizializza totale a intensità di (x,y)
         } = match self.piastrelle.get(&start) {
             Some(colorazione) => colorazione,
             None => return (0, HashSet::new()),
@@ -204,38 +204,27 @@ impl Piano {
         let mut coda = VecDeque::from([start.clone()]);
         let mut visitati = HashSet::from([start.clone()]);
 
-        while !coda.is_empty() {
-            let Piastrella { x: cx, y: cy } = coda.pop_front().unwrap();
-            let mut deltas: Vec<(i32, i32)> = Vec::new();
-
-            for dy in -1..=1 {
-                for dx in -1..=1 {
-                    deltas.push((dx, dy));
-                }
-            }
-
-            deltas
-                .iter()
-                .map(|(dx, dy)| Piastrella {
+        while let Some(Piastrella { x: cx, y: cy }) = coda.pop_front() {
+            for (dx, dy) in ADIACENTI {
+                let adiacente = Piastrella {
                     x: cx + dx,
                     y: cy + dy,
-                })
-                .filter_map(|adiacente| {
-                    if let Some(Colorazione { colore, intensita }) = self.piastrelle.get(&adiacente)
-                    {
-                        if !omogeneo || colore.eq(colore_omogeneo) {
-                            return Some((adiacente.clone(), intensita));
-                        }
+                };
+
+                if visitati.contains(&adiacente) {
+                    continue;
+                }
+
+                if let Some(Colorazione { colore, intensita }) = self.piastrelle.get(&adiacente) {
+                    if omogeneo && !colore.eq(colore_omogeneo) {
+                        continue;
                     }
-                    None
-                })
-                .for_each(|(adiacente, intensita)| {
-                    if !visitati.contains(&adiacente) {
-                        visitati.insert(adiacente.clone());
-                        coda.push_back(adiacente.clone());
-                        totale += intensita;
-                    }
-                });
+
+                    visitati.insert(adiacente.clone());
+                    coda.push_back(adiacente.clone());
+                    totale += intensita;
+                }
+            }
         }
 
         (totale, visitati)
