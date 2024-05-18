@@ -13,6 +13,11 @@ fn test_blocco() {
     run_test(String::from("blocco"));
 }
 
+#[test]
+fn test_propaga() {
+    run_test(String::from("propaga"));
+}
+
 // --- utils functions ---
 
 fn run_test(name: String) {
