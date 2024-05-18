@@ -472,3 +472,281 @@ mod propaga {
             .eq(vec![0, 0, 0, 0, 0]));
     }
 }
+
+/// Test per la funzione `ordina`
+mod ordina {
+    #[cfg(test)]
+    use crate::*;
+
+    #[test]
+    fn test_ordina() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("x"), 1);
+        piano.colora(0, 1, String::from("y"), 3);
+        piano.colora(0, 2, String::from("z"), 4);
+
+        piano.regola(String::from("x 1 x"));
+        piano.regola(String::from("y 1 y"));
+        piano.regola(String::from("z 1 z"));
+
+        piano.propaga(1, 1);
+        assert_eq!(
+            piano.regole,
+            vec![
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("x")
+                    }],
+                    colore: String::from("x"),
+                    utilizzo: 1
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("y")
+                    }],
+                    colore: String::from("y"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("z")
+                    }],
+                    colore: String::from("z"),
+                    utilizzo: 0
+                }
+            ]
+        );
+
+        piano.ordina();
+        assert_eq!(
+            piano.regole,
+            vec![
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("y")
+                    }],
+                    colore: String::from("y"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("z")
+                    }],
+                    colore: String::from("z"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("x")
+                    }],
+                    colore: String::from("x"),
+                    utilizzo: 1
+                },
+            ]
+        );
+
+        piano.propaga(1, 1);
+        assert_eq!(
+            piano.regole,
+            vec![
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("y")
+                    }],
+                    colore: String::from("y"),
+                    utilizzo: 1
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("z")
+                    }],
+                    colore: String::from("z"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("x")
+                    }],
+                    colore: String::from("x"),
+                    utilizzo: 1
+                },
+            ]
+        );
+
+        piano.ordina();
+        assert_eq!(
+            piano.regole,
+            vec![
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("z")
+                    }],
+                    colore: String::from("z"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("y")
+                    }],
+                    colore: String::from("y"),
+                    utilizzo: 1
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("x")
+                    }],
+                    colore: String::from("x"),
+                    utilizzo: 1
+                },
+            ]
+        );
+
+        piano.propaga(1, 0);
+        assert_eq!(
+            piano.regole,
+            vec![
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("z")
+                    }],
+                    colore: String::from("z"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("y")
+                    }],
+                    colore: String::from("y"),
+                    utilizzo: 2
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("x")
+                    }],
+                    colore: String::from("x"),
+                    utilizzo: 1
+                },
+            ]
+        );
+
+        piano.ordina();
+        assert_eq!(
+            piano.regole,
+            vec![
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("z")
+                    }],
+                    colore: String::from("z"),
+                    utilizzo: 0
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("x")
+                    }],
+                    colore: String::from("x"),
+                    utilizzo: 1
+                },
+                Regola {
+                    requisiti: vec![Requisito {
+                        coefficiente: 1,
+                        colore: String::from("y")
+                    }],
+                    colore: String::from("y"),
+                    utilizzo: 2
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_ordina_blocco() {
+        let mut piano = Piano::new();
+        piano.colora(0, 0, String::from("g"), 1);
+        piano.colora(0, 2, String::from("b"), 2);
+        piano.colora(1, 1, String::from("g"), 3);
+        piano.colora(1, 3, String::from("r"), 4);
+        piano.colora(1, 4, String::from("b"), 5);
+        piano.colora(2, 0, String::from("b"), 6);
+        piano.colora(2, 2, String::from("b"), 7);
+        piano.colora(3, 0, String::from("b"), 8);
+        piano.colora(3, 1, String::from("r"), 9);
+        piano.colora(3, 2, String::from("b"), 10);
+        piano.colora(3, 4, String::from("r"), 11);
+        piano.colora(4, 4, String::from("r"), 12);
+
+        piano.regola(String::from("z 2 g 1 b"));
+        piano.regola(String::from("w 1 g 2 b"));
+        piano.regola(String::from("y 1 b 1 r"));
+        piano.regola(String::from("g 2 b 1 r"));
+        piano.regola(String::from("t 1 b 1 g 1 r"));
+
+        piano.ordina();
+        assert!(piano
+            .regole
+            .iter()
+            .map(
+                |Regola {
+                     utilizzo, colore, ..
+                 }| (*utilizzo, colore.clone())
+            )
+            .eq(vec![
+                (0, String::from('z')),
+                (0, String::from('w')),
+                (0, String::from('y')),
+                (0, String::from('g')),
+                (0, String::from('t'))
+            ]));
+
+        piano.propaga_blocco(1, 1);
+        assert!(piano
+            .regole
+            .iter()
+            .map(
+                |Regola {
+                     utilizzo, colore, ..
+                 }| (*utilizzo, colore.clone())
+            )
+            .eq(vec![
+                (0, String::from('z')),
+                (1, String::from('w')),
+                (4, String::from('y')),
+                (0, String::from('g')),
+                (0, String::from('t'))
+            ]));
+
+        piano.ordina();
+        assert!(piano
+            .regole
+            .iter()
+            .map(
+                |Regola {
+                     utilizzo, colore, ..
+                 }| (*utilizzo, colore.clone())
+            )
+            .eq(vec![
+                (0, String::from('z')),
+                (0, String::from('g')),
+                (0, String::from('t')),
+                (1, String::from('w')),
+                (4, String::from('y')),
+            ]));
+    }
+}
