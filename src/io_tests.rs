@@ -17,10 +17,7 @@ fn test_blocco() {
 
 fn run_test(name: String) {
     run(Some(input(&name)), Some(test(&name)));
-
-    let eq = is_same_file(output(&name), test(&name));
-    assert!(eq.is_ok());
-    assert!(eq.unwrap());
+    assert!(is_same_file(output(&name), test(&name)).expect(""));
 }
 
 fn input(s: &str) -> String {
@@ -32,7 +29,7 @@ fn output(s: &str) -> String {
 }
 
 fn test(s: &str) -> String {
-    format!("test_{}", s)
+    format!("inputs/test_{}.out", s)
 }
 
 // https://users.rust-lang.org/t/efficient-way-of-checking-if-two-files-have-the-same-content/74735
