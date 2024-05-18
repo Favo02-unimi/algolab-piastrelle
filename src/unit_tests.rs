@@ -333,17 +333,17 @@ mod propaga {
     fn test_propaga() {
         let mut piano = Piano::new();
         piano.colora(0, 0, String::from("g"), 1);
-        piano.colora(0, 2, String::from("b"), 1);
-        piano.colora(1, 1, String::from("g"), 1);
-        piano.colora(1, 3, String::from("r"), 1);
-        piano.colora(1, 4, String::from("b"), 1);
-        piano.colora(2, 0, String::from("b"), 1);
-        piano.colora(2, 2, String::from("b"), 1);
-        piano.colora(3, 0, String::from("b"), 1);
-        piano.colora(3, 1, String::from("r"), 1);
-        piano.colora(3, 2, String::from("b"), 1);
-        piano.colora(3, 4, String::from("r"), 1);
-        piano.colora(4, 4, String::from("r"), 1);
+        piano.colora(0, 2, String::from("b"), 2);
+        piano.colora(1, 1, String::from("g"), 3);
+        piano.colora(1, 3, String::from("r"), 4);
+        piano.colora(1, 4, String::from("b"), 5);
+        piano.colora(2, 0, String::from("b"), 6);
+        piano.colora(2, 2, String::from("b"), 7);
+        piano.colora(3, 0, String::from("b"), 8);
+        piano.colora(3, 1, String::from("r"), 9);
+        piano.colora(3, 2, String::from("b"), 10);
+        piano.colora(3, 4, String::from("r"), 11);
+        piano.colora(4, 4, String::from("r"), 12);
 
         piano.regola(String::from("z 2 g 1 b"));
         piano.regola(String::from("w 1 g 2 b"));
@@ -357,8 +357,13 @@ mod propaga {
             .iter()
             .map(|Regola { utilizzo, .. }| *utilizzo)
             .eq(vec![0, 1, 0, 0, 0]));
-        assert!(piano.stato(1, 1).is_some());
-        assert_eq!(piano.stato(1, 1).unwrap().colore, String::from("w"));
+        assert_eq!(
+            piano.stato(1, 1),
+            Some(Colorazione {
+                colore: String::from("w"),
+                intensita: 3
+            })
+        );
 
         piano.propaga(3, 3);
         assert!(piano
@@ -366,25 +371,30 @@ mod propaga {
             .iter()
             .map(|Regola { utilizzo, .. }| *utilizzo)
             .eq(vec![0, 1, 1, 0, 0]));
-        assert!(piano.stato(3, 3).is_some());
-        assert_eq!(piano.stato(3, 3).unwrap().colore, String::from("y"));
+        assert_eq!(
+            piano.stato(3, 3),
+            Some(Colorazione {
+                colore: String::from("y"),
+                intensita: 1
+            })
+        );
     }
 
     #[test]
     fn test_propaga_blocco() {
         let mut piano = Piano::new();
         piano.colora(0, 0, String::from("g"), 1);
-        piano.colora(0, 2, String::from("b"), 1);
-        piano.colora(1, 1, String::from("g"), 1);
-        piano.colora(1, 3, String::from("r"), 1);
-        piano.colora(1, 4, String::from("b"), 1);
-        piano.colora(2, 0, String::from("b"), 1);
-        piano.colora(2, 2, String::from("b"), 1);
-        piano.colora(3, 0, String::from("b"), 1);
-        piano.colora(3, 1, String::from("r"), 1);
-        piano.colora(3, 2, String::from("b"), 1);
-        piano.colora(3, 4, String::from("r"), 1);
-        piano.colora(4, 4, String::from("r"), 1);
+        piano.colora(0, 2, String::from("b"), 2);
+        piano.colora(1, 1, String::from("g"), 3);
+        piano.colora(1, 3, String::from("r"), 4);
+        piano.colora(1, 4, String::from("b"), 5);
+        piano.colora(2, 0, String::from("b"), 6);
+        piano.colora(2, 2, String::from("b"), 7);
+        piano.colora(3, 0, String::from("b"), 8);
+        piano.colora(3, 1, String::from("r"), 9);
+        piano.colora(3, 2, String::from("b"), 10);
+        piano.colora(3, 4, String::from("r"), 11);
+        piano.colora(4, 4, String::from("r"), 12);
 
         piano.regola(String::from("z 2 g 1 b"));
         piano.regola(String::from("w 1 g 2 b"));
@@ -398,18 +408,48 @@ mod propaga {
             .iter()
             .map(|Regola { utilizzo, .. }| *utilizzo)
             .eq(vec![0, 1, 4, 0, 0]));
-        assert!(piano.stato(1, 1).is_some());
-        assert_eq!(piano.stato(1, 1).unwrap().colore, String::from("w"));
-        assert!(piano.stato(2, 0).is_some());
-        assert_eq!(piano.stato(2, 0).unwrap().colore, String::from("y"));
-        assert!(piano.stato(2, 2).is_some());
-        assert_eq!(piano.stato(2, 2).unwrap().colore, String::from("y"));
-        assert!(piano.stato(3, 0).is_some());
-        assert_eq!(piano.stato(3, 0).unwrap().colore, String::from("y"));
-        assert!(piano.stato(2, 0).is_some());
-        assert_eq!(piano.stato(2, 0).unwrap().colore, String::from("y"));
-        assert!(piano.stato(3, 2).is_some());
-        assert_eq!(piano.stato(3, 2).unwrap().colore, String::from("y"));
+        assert_eq!(
+            piano.stato(1, 1),
+            Some(Colorazione {
+                colore: String::from("w"),
+                intensita: 3
+            })
+        );
+        assert_eq!(
+            piano.stato(2, 0),
+            Some(Colorazione {
+                colore: String::from("y"),
+                intensita: 6
+            })
+        );
+        assert_eq!(
+            piano.stato(2, 2),
+            Some(Colorazione {
+                colore: String::from("y"),
+                intensita: 7
+            })
+        );
+        assert_eq!(
+            piano.stato(3, 0),
+            Some(Colorazione {
+                colore: String::from("y"),
+                intensita: 8
+            })
+        );
+        assert_eq!(
+            piano.stato(2, 0),
+            Some(Colorazione {
+                colore: String::from("y"),
+                intensita: 6
+            })
+        );
+        assert_eq!(
+            piano.stato(3, 2),
+            Some(Colorazione {
+                colore: String::from("y"),
+                intensita: 10
+            })
+        );
     }
 
     #[test]
