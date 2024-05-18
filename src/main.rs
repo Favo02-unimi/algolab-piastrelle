@@ -260,80 +260,100 @@ impl Piano {
         totale
     }
 
-    fn _propaga_generico(&self, x: i32, y: i32) -> Option<(i32, i32, usize, String)> {
+    /// Controlla se esiste una regola di propagazione applicabile alla piastrella
+    /// individuata da `x`, `y`, **senza** applicarla (il piano **non** è modificato)
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella da propagare
+    /// * `y` - ordinate della piastrella da propagare
+    ///
+    /// # Returns
+    /// * `Some(indice, colore)` - l'indice della prima regola applicabile e il colore finale
+    /// * `None` - se nessuna regola è applicabile
+    fn _simula_propagazione(&self, x: i32, y: i32) -> Option<(usize, String)> {
         let mut intorno: HashMap<String, u8> = HashMap::new();
 
-        for dy in -1..=1 {
-            for dx in -1..=1 {
-                if dy == 0 && dx == 0 {
-                    continue;
-                }
-                if let Some(Colorazione { colore, .. }) = self.piastrelle.get(&Piastrella {
-                    x: x + dx,
-                    y: y + dy,
-                }) {
-                    let valore = *intorno.get(colore).unwrap_or(&0) + 1;
-                    intorno.insert(colore.clone(), valore);
-                }
-            }
-        }
+        // "precalcola" valori disponibili nell'intorno di (x,y)
+        ADIACENTI
+            .iter()
+            .map(|(dx, dy)| Piastrella {
+                x: x + dx,
+                y: y + dy,
+            })
+            .filter_map(|adiacente| self.piastrelle.get(&adiacente))
+            .for_each(|Colorazione { colore, .. }| {
+                *intorno.entry(colore.clone()).or_default() += 1
+            });
 
-        'regole: for (
-            i,
-            Regola {
-                requisiti,
-                colore: colore_target,
-                ..
-            },
-        ) in self.regole.iter().enumerate()
-        {
-            for Requisito {
-                coefficiente,
-                colore,
-            } in requisiti
-            {
-                if intorno.get(colore).unwrap_or(&0) < coefficiente {
-                    continue 'regole; // continue outer loop, skipping return
-                }
-            }
-            return Some((x, y, i, colore_target.clone()));
-        }
-
-        None
+        // trova prima regola applicabile
+        self.regole
+            .iter()
+            .enumerate()
+            .find(|(.., Regola { requisiti, .. })| {
+                requisiti.iter().all(
+                    |Requisito {
+                         coefficiente,
+                         colore,
+                     }| intorno.get(colore).unwrap_or(&0) >= coefficiente,
+                )
+            })
+            .map(|(i, Regola { colore, .. })| (i, colore.clone()))
     }
 
+    /// Propaga una piastrella, applicando la *prima* regola applicabile, modifica
+    /// il piano senza restituire nulla
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella da propagare
+    /// * `y` - ordinate della piastrella da propagare
     fn propaga(&mut self, x: i32, y: i32) {
-        if let Some((x, y, i, colore)) = self._propaga_generico(x, y) {
-            self.piastrelle.insert(
-                Piastrella { x, y },
-                Colorazione {
-                    colore,
-                    intensita: 1,
-                },
-            );
+        // se una regola è stata trovata applicabile
+        if let Some((i, colore)) = self._simula_propagazione(x, y) {
+            // intensità invariata se accesa o 1
+            let intensita = *self
+                .piastrelle
+                .get(&Piastrella { x, y })
+                .map(|Colorazione { intensita, .. }| intensita)
+                .unwrap_or(&1);
+
+            self.piastrelle
+                .insert(Piastrella { x, y }, Colorazione { colore, intensita });
             self.regole[i].utilizzo += 1;
         }
     }
 
+    /// Propaga un blocco, applicando a ciascuna piastrella del blocco la *prima*
+    /// regola applicabile. I cambiamenti non sono applicati fino alla *fine* di
+    /// tutte le operazioni, ovvero la propagazione di una piastrella del blocco
+    /// **non** può far scattare la propagazione di un'altra piastrella nello stesso blocco.
+    /// Modifica il piano senza restituire nulla
+    ///
+    /// # Arguments
+    /// * `x` - ascisse della piastrella da propagare
+    /// * `y` - ordinate della piastrella da propagare
     fn propaga_blocco(&mut self, x: i32, y: i32) {
-        let (.., visitati) = self._blocco_generico(x, y, false);
-        let mut applicazioni: Vec<(i32, i32, usize, String)> = Vec::new();
+        // calcola blocco di (x,y)
+        let (.., blocco) = self._blocco_generico(x, y, false);
 
-        for Piastrella { x, y } in visitati {
-            if let Some(applicazione) = self._propaga_generico(x, y) {
-                applicazioni.push(applicazione)
-            }
-        }
+        // trova la regola applicabile ad ogni piastrella del blocco
+        let applicazioni: Vec<((i32, i32), (usize, String))> = blocco
+            .into_iter()
+            .map(|Piastrella { x, y }| (x, y, self._simula_propagazione(x, y)))
+            .filter(|(.., regola)| regola.is_some())
+            .map(|(x, y, regola)| ((x, y), regola.unwrap()))
+            .collect();
 
-        for (x, y, i, colore) in applicazioni {
+        // applica le regole
+        for ((x, y), (i, colore)) in applicazioni {
+            let intensita = *self
+                .piastrelle
+                .get(&Piastrella { x, y })
+                .map(|Colorazione { intensita, .. }| intensita)
+                .unwrap_or(&1);
+
+            self.piastrelle
+                .insert(Piastrella { x, y }, Colorazione { colore, intensita });
             self.regole[i].utilizzo += 1;
-            self.piastrelle.insert(
-                Piastrella { x, y },
-                Colorazione {
-                    colore,
-                    intensita: 1,
-                },
-            );
         }
     }
 

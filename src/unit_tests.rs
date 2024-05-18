@@ -324,7 +324,7 @@ mod blocco {
     }
 }
 
-/// Test per le funzioni `_propaga_generico`, `propaga`, `propaga_blocco`
+/// Test per le funzioni `_simula_propagazione`, `propaga`, `propaga_blocco`
 mod propaga {
     #[cfg(test)]
     use crate::*;
