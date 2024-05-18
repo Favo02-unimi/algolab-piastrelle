@@ -357,6 +357,9 @@ impl Piano {
         }
     }
 
+    /// Ordina le regole di propagazione, in base al loro consumo (in maniera crescente).
+    /// Due regole con consumo uguale rimangono nello stesso ordine relativo (stabile).
+    /// Modifica il piano senza restituire nulla
     fn ordina(&mut self) {
         self.regole.sort_by(|a, b| a.utilizzo.cmp(&b.utilizzo));
     }
