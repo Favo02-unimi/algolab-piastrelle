@@ -41,7 +41,7 @@ def blocco(numBlocchi):
     print(f"b {x} {y}") # blocco
     print(f"B {x} {y}") # omogeneo
 
-def propaga(numPropagazioni):
+def propaga(numPropagazioni, forseOrdina=False):
   for i in range(numPropagazioni):
     x = random.randint(-bound, bound)
     y = random.randint(-bound, bound)
@@ -49,6 +49,9 @@ def propaga(numPropagazioni):
       print(f"p {x} {y}")
     else:
       print(f"P {x} {y}")
+    if forseOrdina and random.randint(1, 10) == 1:
+      print("o")
+      print("s")
 
 def pista(numPiste):
   for _ in range(numPiste):
@@ -90,7 +93,7 @@ blocco(1_000)
 
 # regole e propagazione
 generaRegole(1_000)
-propaga(1_000)
+propaga(1_000, forseOrdina=True)
 stampaTutti()
 
 # pista(1_000)
