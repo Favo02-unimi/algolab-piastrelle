@@ -9,6 +9,17 @@ def generaPiastrelle(numPiastrelle):
     i = random.randint(1, 1_000)
     print(f"C {x} {y} {c} {i}")
 
+def spegni(numPiastrelle):
+  for _ in range(numPiastrelle):
+    x = random.randint(-bound, bound)
+    y = random.randint(-bound, bound)
+    print(f"S {x} {y}")
+
+def stampaTutti():
+  for y in range(-bound, bound+1):
+    for x in range(-bound, bound+1):
+      print(f"? {x} {y}")
+
 def generaRegole(numRegole):
   for _ in range(numRegole):
     maxx = random.randint(1, 8)
@@ -21,6 +32,7 @@ def generaRegole(numRegole):
       print(f" {coeff} {c}", end="")
       count += coeff
     print()
+  print("s")
 
 def blocco(numBlocchi):
   for _ in range(numBlocchi):
@@ -30,7 +42,6 @@ def blocco(numBlocchi):
     print(f"B {x} {y}") # omogeneo
 
 def propaga(numPropagazioni):
-  print("s")
   for i in range(numPropagazioni):
     x = random.randint(-bound, bound)
     y = random.randint(-bound, bound)
@@ -38,9 +49,6 @@ def propaga(numPropagazioni):
       print(f"p {x} {y}")
     else:
       print(f"P {x} {y}")
-    # stampa e ordina le regole per vedere utilizzo
-    print("o")
-    print("s")
 
 def pista(numPiste):
   for _ in range(numPiste):
@@ -69,9 +77,21 @@ colors = ["q", "w", "e", "r"]
 dirs = ["NN", "SS", "WW", "EE", "NE", "NO", "SE", "SO"]
 bound = 500
 
+# genera piastrelle
 generaPiastrelle(500_000)
-# generaRegole(1_000)
+stampaTutti()
+
+# spegni un po' di piastrelle
+spegni(500)
+stampaTutti()
+
+# blocchi
 blocco(1_000)
-# propaga(1_000)
+
+# regole e propagazione
+generaRegole(1_000)
+propaga(1_000)
+stampaTutti()
+
 # pista(1_000)
 # lung(10_000)

@@ -11,6 +11,11 @@ fn test_small() {
 }
 
 #[test]
+fn test_spegni() {
+    run_test(String::from("spegni"));
+}
+
+#[test]
 fn test_blocco() {
     run_test(String::from("blocco"));
 }
@@ -18,6 +23,11 @@ fn test_blocco() {
 #[test]
 fn test_propaga() {
     run_test(String::from("propaga"));
+}
+
+#[test]
+fn test_tutto() {
+    run_test(String::from("tutto"));
 }
 
 // --- utils functions ---
