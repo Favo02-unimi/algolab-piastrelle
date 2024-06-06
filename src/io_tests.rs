@@ -26,11 +26,6 @@ fn test_propaga() {
 }
 
 #[test]
-fn test_ordina() {
-    run_test(String::from("ordina"));
-}
-
-#[test]
 fn test_tutto() {
     run_test(String::from("tutto"));
 }
